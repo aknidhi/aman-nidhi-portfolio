@@ -1,7 +1,12 @@
 import { createServerClient } from "@supabase/ssr";
-import { NextResponse, type NextRequest } from "next/server";
+import {
+  NextResponse,
+  type NextRequest,
+} from "next/server";
 
-export async function updateSession(request: NextRequest) {
+export async function updateSession(
+  request: NextRequest
+) {
   let supabaseResponse = NextResponse.next({
     request,
   });
@@ -16,68 +21,153 @@ export async function updateSession(request: NextRequest) {
         },
 
         setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value }) => {
-            request.cookies.set(name, value);
-          });
+          /*
+           * Update request cookies first.
+           */
+          cookiesToSet.forEach(
+            ({ name, value }) => {
+              request.cookies.set(
+                name,
+                value
+              );
+            }
+          );
 
-          supabaseResponse = NextResponse.next({
-            request,
-          });
+          /*
+           * Recreate the response using the
+           * updated request cookies.
+           */
+          supabaseResponse =
+            NextResponse.next({
+              request,
+            });
 
-          cookiesToSet.forEach(({ name, value, options }) => {
-            supabaseResponse.cookies.set(name, value, options);
-          });
+          /*
+           * Copy Supabase auth cookies onto
+           * the response.
+           */
+          cookiesToSet.forEach(
+            ({
+              name,
+              value,
+              options,
+            }) => {
+              supabaseResponse.cookies.set(
+                name,
+                value,
+                options
+              );
+            }
+          );
         },
       },
     }
   );
 
-  const pathname = request.nextUrl.pathname;
+  const pathname =
+    request.nextUrl.pathname;
+
 
   /*
-   * The login page must always remain publicly accessible.
-   * No authentication check is required here.
+   * The login page must remain publicly
+   * accessible.
    */
   if (pathname === "/admin/login") {
     return supabaseResponse;
   }
 
+
   /*
    * Only protect /admin routes.
    */
-  const isAdminRoute = pathname.startsWith("/admin");
-
-  if (!isAdminRoute) {
+  if (!pathname.startsWith("/admin")) {
     return supabaseResponse;
   }
 
+
   /*
-   * Check the authenticated user for protected admin routes.
+   * Check the authenticated user's claims.
    *
-   * Supabase may return data: null when there is no valid
-   * authenticated session, so we handle that safely.
+   * getClaims() is used instead of getSession()
+   * for server-side authorization.
    */
-  const { data, error } = await supabase.auth.getClaims();
+  const {
+    data,
+    error,
+  } = await supabase.auth.getClaims();
 
   const claims = data?.claims;
 
+
   /*
-   * No valid authentication → send user to login.
+   * No valid authentication.
    */
   if (error || !claims) {
-    const loginUrl = request.nextUrl.clone();
+    const loginUrl =
+      request.nextUrl.clone();
 
-    loginUrl.pathname = "/admin/login";
+    loginUrl.pathname =
+      "/admin/login";
+
     loginUrl.searchParams.set(
       "redirect",
       pathname
     );
 
-    return NextResponse.redirect(loginUrl);
+    /*
+     * Create the redirect response.
+     */
+    const redirectResponse =
+      NextResponse.redirect(
+        loginUrl
+      );
+
+    /*
+     * IMPORTANT:
+     *
+     * Supabase may have refreshed or changed
+     * authentication cookies while getClaims()
+     * was running.
+     *
+     * Those cookies must also be copied to
+     * the redirect response.
+     */
+    supabaseResponse.cookies
+      .getAll()
+      .forEach((cookie) => {
+        redirectResponse.cookies.set(
+          cookie
+        );
+      });
+
+
+    /*
+     * Preserve cache-related headers.
+     */
+    for (const header of [
+      "cache-control",
+      "expires",
+      "pragma",
+    ]) {
+      const value =
+        supabaseResponse.headers.get(
+          header
+        );
+
+      if (value) {
+        redirectResponse.headers.set(
+          header,
+          value
+        );
+      }
+    }
+
+    return redirectResponse;
   }
 
+
   /*
-   * Authenticated user → allow the request.
+   * User is authenticated.
    */
   return supabaseResponse;
 }

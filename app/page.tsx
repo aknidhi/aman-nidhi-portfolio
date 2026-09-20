@@ -191,33 +191,19 @@ export default async function Home() {
         <div className="pointer-events-none absolute left-[55%] top-[35%] h-[500px] w-[500px] -translate-x-1/2 rounded-full bg-violet-500/10 blur-[140px]" />
 
         <div className="container relative z-10 pt-24">
-          <div className="grid items-center gap-16 lg:grid-cols-[1fr_300px]">
-
-            {/* =================================================
-                HERO CONTENT
-            ================================================= */}
-
-            <HeroContent
-              settings={{
-                name: settings.name,
-                role: settings.role,
-                hero_badge: settings.hero_badge,
-                hero_title: settings.hero_title,
-                hero_description:
-                  settings.hero_description,
-                email: settings.email,
-                github_url:
-                  settings.github_url,
-                linkedin_url:
-                  settings.linkedin_url,
-              }}
-            />
+          <div className="grid items-center gap-10 lg:grid-cols-[1fr_300px] lg:gap-16">
 
             {/* =================================================
                 PROFILE CARD
+
+                Mobile:
+                Appears ABOVE the hero content.
+
+                Desktop:
+                Moves to the RIGHT side.
             ================================================= */}
 
-            <div className="hidden lg:block">
+            <div className="order-1 flex justify-center lg:order-2">
               <ProfileCard
                 imageUrl={profileImageUrl}
                 imageAlt={
@@ -236,6 +222,36 @@ export default async function Home() {
                   settings.profile_card_subtitle ||
                   "Data Analytics"
                 }
+              />
+            </div>
+
+            {/* =================================================
+                HERO CONTENT
+
+                Mobile:
+                Appears BELOW the profile photo.
+
+                Desktop:
+                Moves to the LEFT side.
+            ================================================= */}
+
+            <div className="order-2 lg:order-1">
+              <HeroContent
+                settings={{
+                  name: settings.name,
+                  role: settings.role,
+                  hero_badge:
+                    settings.hero_badge,
+                  hero_title:
+                    settings.hero_title,
+                  hero_description:
+                    settings.hero_description,
+                  email: settings.email,
+                  github_url:
+                    settings.github_url,
+                  linkedin_url:
+                    settings.linkedin_url,
+                }}
               />
             </div>
 

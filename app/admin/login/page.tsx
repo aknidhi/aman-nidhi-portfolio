@@ -2,7 +2,6 @@
 
 import { FormEvent, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { ArrowLeft, LockKeyhole } from "lucide-react";
 import { createBrowserClient } from "@supabase/ssr";
 
@@ -16,64 +15,94 @@ const supabase = createBrowserClient(
 );
 
 export default function AdminLoginPage() {
-  const router = useRouter();
-
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
-  async function handleLogin(event: FormEvent<HTMLFormElement>) {
+  async function handleLogin(
+    event: FormEvent<HTMLFormElement>
+  ) {
     event.preventDefault();
 
     setIsLoading(true);
     setError("");
 
-    const { error } = await supabase.auth.signInWithPassword({
-      email: email.trim(),
-      password,
-    });
+    const { error } =
+      await supabase.auth.signInWithPassword({
+        email: email.trim(),
+        password,
+      });
 
     if (error) {
-      setError(error.message || "Invalid email or password.");
+      setError(
+        error.message ||
+          "Invalid email or password."
+      );
+
       setIsLoading(false);
       return;
     }
 
     /*
-     * Give the browser a moment to store the authenticated
-     * Supabase session cookie before navigating.
+     * Full page navigation is intentional here.
+     *
+     * It allows the browser session cookies to be
+     * available before the protected admin route
+     * is loaded.
      */
-    router.push("/admin");
-    router.refresh();
+    window.location.href = "/admin";
   }
 
   return (
     <main className="admin-login-page">
       <div className="admin-login-container">
-        <Link href="/" className="admin-back-link">
+
+        {/* BACK TO PORTFOLIO */}
+
+        <Link
+          href="/"
+          className="admin-back-link"
+        >
           <ArrowLeft size={16} />
           Back to portfolio
         </Link>
 
+
+        {/* LOGIN CARD */}
+
         <div className="admin-login-card">
+
           <div className="admin-login-icon">
             <LockKeyhole size={20} />
           </div>
 
-          <p className="eyebrow">ADMIN ACCESS</p>
+          <p className="eyebrow">
+            ADMIN ACCESS
+          </p>
 
-          <h1>Welcome back.</h1>
+          <h1>
+            Welcome back.
+          </h1>
 
           <p className="admin-login-description">
-            Sign in to manage your portfolio, projects and messages.
+            Sign in to manage your portfolio,
+            projects and messages.
           </p>
+
+
+          {/* LOGIN FORM */}
 
           <form
             onSubmit={handleLogin}
             className="admin-login-form"
           >
+
+            {/* EMAIL */}
+
             <div className="form-field">
+
               <label htmlFor="admin-email">
                 Email
               </label>
@@ -89,9 +118,14 @@ export default function AdminLoginPage() {
                 autoComplete="email"
                 required
               />
+
             </div>
 
+
+            {/* PASSWORD */}
+
             <div className="form-field">
+
               <label htmlFor="admin-password">
                 Password
               </label>
@@ -107,13 +141,20 @@ export default function AdminLoginPage() {
                 autoComplete="current-password"
                 required
               />
+
             </div>
+
+
+            {/* ERROR */}
 
             {error && (
               <p className="admin-login-error">
                 {error}
               </p>
             )}
+
+
+            {/* SUBMIT */}
 
             <button
               type="submit"
@@ -124,8 +165,11 @@ export default function AdminLoginPage() {
                 ? "Signing in..."
                 : "Sign in"}
             </button>
+
           </form>
+
         </div>
+
       </div>
     </main>
   );
