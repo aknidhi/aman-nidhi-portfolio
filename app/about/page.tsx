@@ -28,6 +28,14 @@ type Education = {
   published: boolean;
 };
 
+type SpeakingLanguage = {
+  id: string;
+  name: string;
+  fluency: string | null;
+  sort_order: number;
+  published: boolean;
+};
+
 type Certification = {
   id: string;
   title: string;
@@ -42,6 +50,9 @@ type Certification = {
 
 type PortfolioSettings = {
   id: string;
+
+  profile_image_path: string | null;
+  profile_image_alt: string | null;
 
   name: string | null;
   role: string | null;
@@ -70,6 +81,7 @@ export default async function AboutPage() {
     { data: education },
     { data: certifications },
     { data: projects },
+    { data: speakingLanguageData },
     { data: settingsData },
   ] = await Promise.all([
     supabaseServer
@@ -109,9 +121,17 @@ export default async function AboutPage() {
       }),
 
     supabaseServer
+      .from("portfolio_skills")
+      .select("id, name, fluency, sort_order, published")
+      .eq("category", "Speaking Languages")
+      .eq("published", true)
+      .order("sort_order", { ascending: true })
+      .order("created_at", { ascending: true }),
+
+    supabaseServer
       .from("portfolio_settings")
       .select(
-        "id, name, role, location, about_text, about_intro, about_description, about_languages, about_current_focus, about_page_title, about_page_description, email, github_url, linkedin_url, resume_path, updated_at"
+        "id, profile_image_path, profile_image_alt, name, role, location, about_text, about_intro, about_description, about_languages, about_current_focus, about_page_title, about_page_description, email, github_url, linkedin_url, resume_path, updated_at"
       )
       .limit(1)
       .maybeSingle(),
@@ -124,10 +144,17 @@ export default async function AboutPage() {
 
   const projectList: Project[] = projects || [];
 
-  const primaryEducation = educationList[0];
+  const speakingLanguages: SpeakingLanguage[] =
+    speakingLanguageData || [];
 
   const settings: PortfolioSettings = {
     id: settingsData?.id || "",
+
+    profile_image_path:
+      settingsData?.profile_image_path || null,
+
+    profile_image_alt:
+      settingsData?.profile_image_alt || "Aman Nidhi",
 
     name:
       settingsData?.name ||
@@ -194,6 +221,16 @@ export default async function AboutPage() {
     settings.resume_path
       ? `/${settings.resume_path.replace(/^\/+/, "")}`
       : "/resume/Aman_Kumar_Nidhi_Resume.pdf";
+
+  let profileImageUrl: string | null = null;
+
+  if (settings.profile_image_path) {
+    const { data: publicData } = supabaseServer.storage
+      .from("project-images")
+      .getPublicUrl(settings.profile_image_path);
+
+    profileImageUrl = publicData.publicUrl;
+  }
 
   return (
     <main className="min-h-screen bg-[#090909] text-white">
@@ -271,14 +308,32 @@ export default async function AboutPage() {
               </span>
             </div>
 
-            <div className="max-w-4xl">
-              <p className="text-2xl leading-[1.35] tracking-[-0.025em] text-white/70 md:text-4xl">
-                {settings.about_intro}
-              </p>
+            <div className="grid gap-10 lg:grid-cols-[1fr_220px] lg:items-start">
+              <div className="max-w-4xl">
+                <p className="text-2xl leading-[1.35] tracking-[-0.025em] text-white/70 md:text-4xl">
+                  {settings.about_intro}
+                </p>
 
-              <p className="mt-8 max-w-3xl text-base leading-7 text-white/35">
-                {settings.about_description}
-              </p>
+                <p className="mt-8 max-w-3xl text-base leading-7 text-white/35">
+                  {settings.about_description}
+                </p>
+              </div>
+
+              {profileImageUrl && (
+                <div className="lg:justify-self-end">
+                  <div className="overflow-hidden rounded-[1.5rem] border border-white/10 bg-[#101010]">
+                    <img
+                      src={profileImageUrl}
+                      alt={
+                        settings.profile_image_alt ||
+                        settings.name ||
+                        "Aman Nidhi"
+                      }
+                      className="h-[260px] w-[220px] object-cover object-center"
+                    />
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -560,43 +615,147 @@ export default async function AboutPage() {
               </span>
             </div>
 
-            <div className="grid gap-px overflow-hidden rounded-3xl border border-white/10 bg-white/10 sm:grid-cols-2">
-              <InfoCard
-                title="Education"
-                value={
-                  primaryEducation
-                    ? `${primaryEducation.degree}${
-                        primaryEducation.specialization
-                          ? ` · ${primaryEducation.specialization}`
-                          : ""
-                      }`
-                    : "Not added yet"
-                }
-              />
+            <div className="space-y-10">
+              {/* EDUCATION */}
+              <div>
+                <div className="mb-5 flex items-end justify-between gap-4">
+                  <div>
+                    <p className="text-xs uppercase tracking-[0.18em] text-white/30">
+                      Education
+                    </p>
 
-              <InfoCard
-                title="University"
-                value={
-                  primaryEducation?.institution ||
-                  "Not added yet"
-                }
-              />
+                    <p className="mt-2 text-sm text-white/25">
+                      Academic background
+                    </p>
+                  </div>
 
-              <InfoCard
-                title="Languages"
-                value={
-                  settings.about_languages ||
-                  "Not added yet"
-                }
-              />
+                  {educationList.length > 0 && (
+                    <span className="text-xs text-white/20">
+                      {educationList.length}{" "}
+                      {educationList.length === 1
+                        ? "entry"
+                        : "entries"}
+                    </span>
+                  )}
+                </div>
 
-              <InfoCard
-                title="Current focus"
-                value={
-                  settings.about_current_focus ||
-                  "Not added yet"
-                }
-              />
+                {educationList.length === 0 ? (
+                  <div className="rounded-2xl border border-white/10 bg-[#101010] px-5 py-6">
+                    <p className="text-sm text-white/35">
+                      Education information will be added soon.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="overflow-hidden rounded-2xl border border-white/10 bg-[#101010]">
+                    <div className="divide-y divide-white/10">
+                      {educationList.map((item) => (
+                        <div
+                          key={item.id}
+                          className="px-5 py-5 sm:px-6 sm:py-6"
+                        >
+                          <div className="grid gap-4 md:grid-cols-[1fr_auto] md:items-start">
+                            <div className="min-w-0">
+                              <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                                <h2 className="text-lg tracking-[-0.025em] text-white/85 sm:text-xl">
+                                  {item.degree}
+                                  {item.specialization
+                                    ? ` · ${item.specialization}`
+                                    : ""}
+                                </h2>
+
+                                {item.status && (
+                                  <span className="rounded-full border border-white/10 px-2.5 py-1 text-[10px] uppercase tracking-[0.12em] text-white/30">
+                                    {item.status}
+                                  </span>
+                                )}
+                              </div>
+
+                              <p className="mt-2 text-sm text-white/50">
+                                {item.institution}
+                              </p>
+
+                              {item.grade && (
+                                <p className="mt-2 text-xs text-white/25">
+                                  {item.grade}
+                                </p>
+                              )}
+
+                              {item.description && (
+                                <p className="mt-3 max-w-2xl text-sm leading-6 text-white/30">
+                                  {item.description}
+                                </p>
+                              )}
+                            </div>
+
+                            <p className="text-xs text-white/30 md:pt-1 md:text-right">
+                              {item.start_year}
+                              {" — "}
+                              {item.end_year || "Present"}
+                            </p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* LANGUAGES + CURRENT FOCUS */}
+              <div className="grid gap-px overflow-hidden rounded-2xl border border-white/10 bg-white/10 md:grid-cols-2">
+                <div className="bg-[#101010] p-5 sm:p-6">
+                  <p className="text-xs uppercase tracking-[0.15em] text-white/25">
+                    Languages
+                  </p>
+
+                  {speakingLanguages.length > 0 ? (
+                    <div className="mt-4 space-y-3">
+                      {speakingLanguages.map((language) => (
+                        <div
+                          key={language.id}
+                          className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between sm:gap-4"
+                        >
+                          <p className="text-sm text-white/70">
+                            {language.name}
+                          </p>
+
+                          {language.fluency && (
+                            <p className="text-xs text-white/25">
+                              {language.fluency}
+                            </p>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="mt-4 text-sm text-white/50">
+                      {settings.about_languages ||
+                        "Not added yet"}
+                    </p>
+                  )}
+                </div>
+
+                <div className="bg-[#101010] p-5 sm:p-6">
+                  <p className="text-xs uppercase tracking-[0.15em] text-white/25">
+                    Current focus
+                  </p>
+
+                  <div className="mt-4 flex flex-wrap gap-2">
+                    {(settings.about_current_focus ||
+                      "AI/ML · Agentic AI · Data Analytics")
+                      .split("·")
+                      .map((item) => item.trim())
+                      .filter(Boolean)
+                      .map((item) => (
+                        <span
+                          key={item}
+                          className="rounded-full border border-white/10 px-3 py-1.5 text-xs text-white/45"
+                        >
+                          {item}
+                        </span>
+                      ))}
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -735,29 +894,5 @@ export default async function AboutPage() {
         </div>
       </footer>
     </main>
-  );
-}
-
-/* ============================================================
-   INFO CARD
-============================================================ */
-
-function InfoCard({
-  title,
-  value,
-}: {
-  title: string;
-  value: string;
-}) {
-  return (
-    <div className="bg-[#101010] p-7">
-      <p className="text-xs uppercase tracking-[0.15em] text-white/25">
-        {title}
-      </p>
-
-      <p className="mt-4 text-sm text-white/60">
-        {value}
-      </p>
-    </div>
   );
 }

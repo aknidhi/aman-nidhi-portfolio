@@ -11,12 +11,23 @@ import ContactCTA from "@/components/home/ContactCTA";
 
 import { supabaseServer } from "@/lib/supabase-server";
 
+export const dynamic = "force-dynamic";
+
 type Project = {
   id: string;
   slug: string;
   title: string;
   short_description: string;
   category: string;
+};
+
+type Skill = {
+  id: string;
+  category: string;
+  name: string;
+  fluency: string | null;
+  sort_order: number;
+  published: boolean;
 };
 
 type PortfolioSettings = {
@@ -48,18 +59,16 @@ type PortfolioSettings = {
   updated_at: string | null;
 };
 
-
 export default async function Home() {
-
   /* =========================================================
-     LOAD PROJECTS + SETTINGS
+     LOAD PROJECTS + SKILLS + SETTINGS
   ========================================================= */
 
   const [
     { data: projectData },
+    { data: skillData },
     { data: settingsData },
   ] = await Promise.all([
-
     supabaseServer
       .from("projects")
       .select(
@@ -74,29 +83,42 @@ export default async function Home() {
       }),
 
     supabaseServer
+      .from("portfolio_skills")
+      .select(
+        "id, category, name, fluency, sort_order, published"
+      )
+      .eq("published", true)
+      .order("sort_order", {
+        ascending: true,
+      })
+      .order("created_at", {
+        ascending: true,
+      }),
+
+    supabaseServer
       .from("portfolio_settings")
       .select("*")
       .limit(1)
       .maybeSingle(),
-
   ]);
-
 
   const projects: Project[] =
     projectData || [];
 
+  const skills: Skill[] =
+    skillData || [];
 
   /* =========================================================
-     SAFE SETTINGS
+     PORTFOLIO SETTINGS
   ========================================================= */
 
   const settings: PortfolioSettings = {
-
     id:
       settingsData?.id || "",
 
     profile_image_path:
-      settingsData?.profile_image_path || null,
+      settingsData?.profile_image_path ||
+      null,
 
     profile_image_alt:
       settingsData?.profile_image_alt ||
@@ -163,7 +185,6 @@ export default async function Home() {
       null,
   };
 
-
   /* =========================================================
      PROFILE IMAGE
   ========================================================= */
@@ -172,7 +193,6 @@ export default async function Home() {
     null;
 
   if (settings.profile_image_path) {
-
     const {
       data: publicData,
     } =
@@ -186,12 +206,14 @@ export default async function Home() {
       publicData.publicUrl;
   }
 
+  /* =========================================================
+     PAGE
+  ========================================================= */
 
   return (
     <main className="min-h-screen overflow-hidden bg-[#090909] text-white">
 
       <Navbar />
-
 
       {/* =====================================================
           HERO
@@ -203,7 +225,6 @@ export default async function Home() {
 
         <div className="pointer-events-none absolute left-[55%] top-[35%] h-[500px] w-[500px] -translate-x-1/2 rounded-full bg-violet-500/10 blur-[140px]" />
 
-
         <div className="container relative z-10 pt-24">
 
           <div className="grid items-center gap-16 lg:grid-cols-[1fr_300px]">
@@ -212,8 +233,10 @@ export default async function Home() {
               settings={{
                 name: settings.name,
                 role: settings.role,
-                hero_badge: settings.hero_badge,
-                hero_title: settings.hero_title,
+                hero_badge:
+                  settings.hero_badge,
+                hero_title:
+                  settings.hero_title,
                 hero_description:
                   settings.hero_description,
                 email: settings.email,
@@ -224,11 +247,12 @@ export default async function Home() {
               }}
             />
 
-
             <div className="hidden lg:block">
 
               <ProfileCard
-                imageUrl={profileImageUrl}
+                imageUrl={
+                  profileImageUrl
+                }
                 imageAlt={
                   settings.profile_image_alt ||
                   "Aman Nidhi"
@@ -251,7 +275,6 @@ export default async function Home() {
 
           </div>
 
-
           <div className="absolute bottom-10 left-0 hidden items-center gap-3 text-xs uppercase tracking-[0.2em] text-white/25 md:flex">
 
             Scroll to explore
@@ -264,7 +287,6 @@ export default async function Home() {
 
       </section>
 
-
       {/* =====================================================
           ABOUT
       ===================================================== */}
@@ -274,7 +296,6 @@ export default async function Home() {
           settings.about_text || ""
         }
       />
-
 
       {/* =====================================================
           SELECTED WORK
@@ -286,8 +307,6 @@ export default async function Home() {
 
           <div className="grid gap-12 md:grid-cols-[180px_1fr]">
 
-            {/* SECTION LABEL */}
-
             <div className="pt-2">
 
               <p className="text-xs uppercase tracking-[0.2em] text-white/30">
@@ -296,9 +315,6 @@ export default async function Home() {
 
             </div>
 
-
-            {/* CONTENT */}
-
             <div>
 
               <div className="mb-14 flex items-end justify-between">
@@ -306,7 +322,6 @@ export default async function Home() {
                 <h2 className="text-4xl tracking-[-0.045em] md:text-6xl">
                   Things I&apos;ve built.
                 </h2>
-
 
                 <Link
                   href="/projects"
@@ -322,7 +337,6 @@ export default async function Home() {
 
               </div>
 
-
               <ProjectGrid
                 projects={projects}
               />
@@ -335,13 +349,13 @@ export default async function Home() {
 
       </section>
 
-
       {/* =====================================================
-          CAPABILITIES
+          SKILLS
       ===================================================== */}
 
-      <Capabilities />
-
+      <Capabilities
+        skills={skills}
+      />
 
       {/* =====================================================
           CONTACT CTA
@@ -354,7 +368,6 @@ export default async function Home() {
         }
       />
 
-
       {/* =====================================================
           FOOTER
       ===================================================== */}
@@ -364,11 +377,10 @@ export default async function Home() {
         <div className="container flex flex-col justify-between gap-4 text-sm text-white/30 sm:flex-row">
 
           <p>
-            © 2026{" "}
+            © {new Date().getFullYear()}{" "}
             {settings.name ||
               "Aman Nidhi"}
           </p>
-
 
           <div className="flex gap-6">
 
@@ -384,7 +396,6 @@ export default async function Home() {
               GitHub
             </a>
 
-
             <a
               href={
                 settings.linkedin_url ||
@@ -396,7 +407,6 @@ export default async function Home() {
             >
               LinkedIn
             </a>
-
 
             <a
               href={`mailto:${
