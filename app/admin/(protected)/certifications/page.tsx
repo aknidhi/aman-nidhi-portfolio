@@ -9,17 +9,9 @@ import {
   Plus,
   Trash2,
 } from "lucide-react";
-import { useRouter } from "next/navigation";
-import { createClient } from "@supabase/supabase-js";
+import { createClient } from "@/lib/supabase/client";
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabasePublishableKey =
-  process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!;
-
-const supabase = createClient(
-  supabaseUrl,
-  supabasePublishableKey
-);
+const supabase = createClient();
 
 type Certification = {
   id: string;
@@ -57,8 +49,6 @@ const emptyForm: FormState = {
 };
 
 export default function AdminCertificationsPage() {
-  const router = useRouter();
-
   const [certifications, setCertifications] = useState<
     Certification[]
   >([]);
@@ -84,33 +74,9 @@ export default function AdminCertificationsPage() {
   const [error, setError] =
     useState("");
 
-  async function refreshSession() {
-    const {
-      data: { session },
-      error: refreshError,
-    } = await supabase.auth.refreshSession();
-
-    if (refreshError || !session) {
-      setError(
-        "Your admin session has expired. Please log in again."
-      );
-
-      return null;
-    }
-
-    return session;
-  }
-
   async function loadCertifications() {
     setIsLoading(true);
     setError("");
-
-    const session = await refreshSession();
-
-    if (!session) {
-      setIsLoading(false);
-      return;
-    }
 
     const {
       data,
@@ -206,13 +172,6 @@ export default function AdminCertificationsPage() {
     setIsSaving(true);
     setError("");
 
-    const session = await refreshSession();
-
-    if (!session) {
-      setIsSaving(false);
-      return;
-    }
-
     const payload = {
       title: form.title.trim(),
       organization:
@@ -289,14 +248,6 @@ export default function AdminCertificationsPage() {
     setActionId(certification.id);
     setError("");
 
-    const session =
-      await refreshSession();
-
-    if (!session) {
-      setActionId(null);
-      return;
-    }
-
     const {
       error: updateError,
     } = await supabase
@@ -347,14 +298,6 @@ export default function AdminCertificationsPage() {
 
     setActionId(certification.id);
     setError("");
-
-    const session =
-      await refreshSession();
-
-    if (!session) {
-      setActionId(null);
-      return;
-    }
 
     const {
       error: deleteError,
@@ -578,7 +521,6 @@ export default function AdminCertificationsPage() {
 
       <main className="admin-page">
         <div className="admin-container">
-
           <header className="admin-header admin-subpage-header">
             <div>
               <Link
@@ -619,7 +561,6 @@ export default function AdminCertificationsPage() {
 
           {showForm && (
             <section className="project-form-panel">
-
               <div className="admin-panel-header">
                 <div>
                   <p className="eyebrow">
@@ -641,7 +582,6 @@ export default function AdminCertificationsPage() {
                 onSubmit={handleSave}
               >
                 <div className="certification-form-grid">
-
                   <div className="form-field">
                     <label htmlFor="cert-title">
                       Certification title
@@ -792,11 +732,9 @@ export default function AdminCertificationsPage() {
                       Publish this certification
                     </span>
                   </label>
-
                 </div>
 
                 <div className="certification-form-actions">
-
                   <button
                     type="submit"
                     className="message-action-button"
@@ -816,14 +754,12 @@ export default function AdminCertificationsPage() {
                   >
                     Cancel
                   </button>
-
                 </div>
               </form>
             </section>
           )}
 
           <section className="admin-project-list-panel">
-
             <div className="admin-panel-header">
               <div>
                 <p className="eyebrow">
@@ -853,7 +789,6 @@ export default function AdminCertificationsPage() {
               </div>
             ) : (
               <div className="certification-list">
-
                 {certifications.map(
                   (certification) => (
                     <article
@@ -861,7 +796,6 @@ export default function AdminCertificationsPage() {
                       className="certification-item"
                     >
                       <div className="certification-info">
-
                         <div className="certification-title-row">
                           <h3>
                             {certification.title}
@@ -904,11 +838,9 @@ export default function AdminCertificationsPage() {
                             {certification.description}
                           </p>
                         )}
-
                       </div>
 
                       <div className="certification-actions">
-
                         <button
                           type="button"
                           className="message-action-button"
@@ -982,15 +914,12 @@ export default function AdminCertificationsPage() {
                           <Trash2 size={14} />
                           Delete
                         </button>
-
                       </div>
                     </article>
                   )
                 )}
-
               </div>
             )}
-
           </section>
 
           <footer className="admin-footer">
@@ -1002,7 +931,6 @@ export default function AdminCertificationsPage() {
               Back to dashboard
             </Link>
           </footer>
-
         </div>
       </main>
     </>

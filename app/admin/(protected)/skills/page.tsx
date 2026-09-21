@@ -10,18 +10,14 @@ import {
   X,
 } from "lucide-react";
 import Link from "next/link";
-import { ChangeEvent, FormEvent, useEffect, useState } from "react";
-import { createClient } from "@supabase/supabase-js";
-import { useRouter } from "next/navigation";
+import {
+  ChangeEvent,
+  FormEvent,
+  useEffect,
+  useState,
+} from "react";
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabasePublishableKey =
-  process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!;
-
-const supabase = createClient(
-  supabaseUrl,
-  supabasePublishableKey
-);
+import { createClient } from "@/lib/supabase/client";
 
 type Skill = {
   id: string;
@@ -57,16 +53,18 @@ const categories = [
 ];
 
 export default function AdminSkillsPage() {
-  const router = useRouter();
+  const supabase = createClient();
 
   const [skills, setSkills] = useState<Skill[]>([]);
   const [form, setForm] = useState<SkillForm>(emptyForm);
 
-  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editingId, setEditingId] =
+    useState<string | null>(null);
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [actionId, setActionId] = useState<string | null>(null);
+  const [actionId, setActionId] =
+    useState<string | null>(null);
 
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
@@ -75,40 +73,28 @@ export default function AdminSkillsPage() {
     loadSkills();
   }, []);
 
-  async function checkSession() {
-    const {
-      data: { session },
-      error: refreshError,
-    } = await supabase.auth.refreshSession();
-
-    if (refreshError || !session) {
-      router.push("/admin/login");
-      return false;
-    }
-
-    return true;
-  }
-
   async function loadSkills() {
     setLoading(true);
     setError("");
 
-    const authenticated = await checkSession();
-
-    if (!authenticated) {
-      setLoading(false);
-      return;
-    }
-
-    const { data, error: skillsError } = await supabase
-      .from("portfolio_skills")
-      .select("*")
-      .order("category", { ascending: true })
-      .order("sort_order", { ascending: true })
-      .order("created_at", { ascending: true });
+    const { data, error: skillsError } =
+      await supabase
+        .from("portfolio_skills")
+        .select("*")
+        .order("category", {
+          ascending: true,
+        })
+        .order("sort_order", {
+          ascending: true,
+        })
+        .order("created_at", {
+          ascending: true,
+        });
 
     if (skillsError) {
-      setError(skillsError.message);
+      setError(
+        `Unable to load skills: ${skillsError.message}`
+      );
       setLoading(false);
       return;
     }
@@ -118,7 +104,9 @@ export default function AdminSkillsPage() {
   }
 
   function handleFormChange(
-    event: ChangeEvent<HTMLInputElement | HTMLSelectElement>
+    event: ChangeEvent<
+      HTMLInputElement | HTMLSelectElement
+    >
   ) {
     const { name, value } = event.target;
 
@@ -178,13 +166,6 @@ export default function AdminSkillsPage() {
     setMessage("");
     setError("");
 
-    const authenticated = await checkSession();
-
-    if (!authenticated) {
-      setSaving(false);
-      return;
-    }
-
     const name = form.name.trim();
     const category = form.category.trim();
 
@@ -219,26 +200,32 @@ export default function AdminSkillsPage() {
 
     try {
       if (editingId) {
-        const { error: updateError } = await supabase
-          .from("portfolio_skills")
-          .update(skillData)
-          .eq("id", editingId);
+        const { error: updateError } =
+          await supabase
+            .from("portfolio_skills")
+            .update(skillData)
+            .eq("id", editingId);
 
         if (updateError) {
           throw new Error(updateError.message);
         }
 
-        setMessage("Skill updated successfully.");
+        setMessage(
+          "Skill updated successfully."
+        );
       } else {
-        const { error: insertError } = await supabase
-          .from("portfolio_skills")
-          .insert(skillData);
+        const { error: insertError } =
+          await supabase
+            .from("portfolio_skills")
+            .insert(skillData);
 
         if (insertError) {
           throw new Error(insertError.message);
         }
 
-        setMessage("Skill added successfully.");
+        setMessage(
+          "Skill added successfully."
+        );
       }
 
       resetForm();
@@ -260,20 +247,14 @@ export default function AdminSkillsPage() {
     setMessage("");
     setError("");
 
-    const authenticated = await checkSession();
-
-    if (!authenticated) {
-      setActionId(null);
-      return;
-    }
-
-    const { error: updateError } = await supabase
-      .from("portfolio_skills")
-      .update({
-        published: !skill.published,
-        updated_at: new Date().toISOString(),
-      })
-      .eq("id", skill.id);
+    const { error: updateError } =
+      await supabase
+        .from("portfolio_skills")
+        .update({
+          published: !skill.published,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", skill.id);
 
     if (updateError) {
       setError(updateError.message);
@@ -292,6 +273,12 @@ export default function AdminSkillsPage() {
       )
     );
 
+    setMessage(
+      skill.published
+        ? "Skill hidden successfully."
+        : "Skill published successfully."
+    );
+
     setActionId(null);
   }
 
@@ -308,17 +295,11 @@ export default function AdminSkillsPage() {
     setMessage("");
     setError("");
 
-    const authenticated = await checkSession();
-
-    if (!authenticated) {
-      setActionId(null);
-      return;
-    }
-
-    const { error: deleteError } = await supabase
-      .from("portfolio_skills")
-      .delete()
-      .eq("id", skill.id);
+    const { error: deleteError } =
+      await supabase
+        .from("portfolio_skills")
+        .delete()
+        .eq("id", skill.id);
 
     if (deleteError) {
       setError(deleteError.message);
@@ -327,26 +308,39 @@ export default function AdminSkillsPage() {
     }
 
     setSkills((current) =>
-      current.filter((item) => item.id !== skill.id)
+      current.filter(
+        (item) => item.id !== skill.id
+      )
     );
 
     if (editingId === skill.id) {
       resetForm();
     }
 
-    setMessage("Skill deleted successfully.");
+    setMessage(
+      "Skill deleted successfully."
+    );
+
     setActionId(null);
   }
 
-  const groupedSkills = categories.map((category) => ({
-    category,
-    skills: skills
-      .filter((skill) => skill.category === category)
-      .sort((a, b) => a.sort_order - b.sort_order),
-  }));
+  const groupedSkills = categories.map(
+    (category) => ({
+      category,
+      skills: skills
+        .filter(
+          (skill) => skill.category === category
+        )
+        .sort(
+          (a, b) =>
+            a.sort_order - b.sort_order
+        ),
+    })
+  );
 
   const uncategorizedSkills = skills.filter(
-    (skill) => !categories.includes(skill.category)
+    (skill) =>
+      !categories.includes(skill.category)
   );
 
   if (loading) {
@@ -364,7 +358,6 @@ export default function AdminSkillsPage() {
   return (
     <main className="min-h-screen bg-[#090909] text-white">
       <div className="mx-auto w-full max-w-6xl px-5 py-8 sm:px-6 lg:px-8">
-
         {/* HEADER */}
         <header className="mb-10 flex flex-col gap-6 border-b border-white/10 pb-8 sm:flex-row sm:items-end sm:justify-between">
           <div>
@@ -385,13 +378,16 @@ export default function AdminSkillsPage() {
             </h1>
 
             <p className="mt-3 max-w-xl text-sm leading-6 text-white/40">
-              Manage the skills displayed on your About page.
+              Manage the skills displayed on
+              your About page.
             </p>
           </div>
 
           <div className="rounded-full border border-white/10 px-4 py-2 text-xs text-white/40">
             {skills.length}{" "}
-            {skills.length === 1 ? "skill" : "skills"}
+            {skills.length === 1
+              ? "skill"
+              : "skills"}
           </div>
         </header>
 
@@ -414,7 +410,9 @@ export default function AdminSkillsPage() {
           <div className="mb-7 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
             <div>
               <p className="text-[10px] uppercase tracking-[0.2em] text-white/30">
-                {editingId ? "Edit skill" : "New skill"}
+                {editingId
+                  ? "Edit skill"
+                  : "New skill"}
               </p>
 
               <h2 className="mt-2 text-xl tracking-[-0.02em] text-white">
@@ -424,8 +422,8 @@ export default function AdminSkillsPage() {
               </h2>
 
               <p className="mt-2 text-sm text-white/35">
-                Add skills that should appear on your public
-                About page.
+                Add skills that should appear on
+                your public About page.
               </p>
             </div>
 
@@ -471,14 +469,16 @@ export default function AdminSkillsPage() {
                 onChange={handleFormChange}
                 className="w-full rounded-2xl border border-white/10 bg-[#151515] px-4 py-3.5 text-sm text-white outline-none transition-all focus:border-white/25"
               >
-                {categories.map((category) => (
-                  <option
-                    key={category}
-                    value={category}
-                  >
-                    {category}
-                  </option>
-                ))}
+                {categories.map(
+                  (category) => (
+                    <option
+                      key={category}
+                      value={category}
+                    >
+                      {category}
+                    </option>
+                  )
+                )}
               </select>
             </label>
 
@@ -526,12 +526,14 @@ export default function AdminSkillsPage() {
               <input
                 type="checkbox"
                 checked={form.published}
-                onChange={handlePublishedChange}
+                onChange={
+                  handlePublishedChange
+                }
                 className="h-4 w-4 accent-violet-400"
               />
 
-              Published — show this skill on the public
-              About page
+              Published — show this skill on
+              the public About page
             </label>
           </form>
         </section>
@@ -550,7 +552,9 @@ export default function AdminSkillsPage() {
                 skills={group.skills}
                 actionId={actionId}
                 onEdit={startEditing}
-                onTogglePublished={togglePublished}
+                onTogglePublished={
+                  togglePublished
+                }
                 onDelete={deleteSkill}
               />
             );
@@ -562,7 +566,9 @@ export default function AdminSkillsPage() {
               skills={uncategorizedSkills}
               actionId={actionId}
               onEdit={startEditing}
-              onTogglePublished={togglePublished}
+              onTogglePublished={
+                togglePublished
+              }
               onDelete={deleteSkill}
             />
           )}
@@ -589,7 +595,9 @@ type SkillCategoryProps = {
   skills: Skill[];
   actionId: string | null;
   onEdit: (skill: Skill) => void;
-  onTogglePublished: (skill: Skill) => void;
+  onTogglePublished: (
+    skill: Skill
+  ) => void;
   onDelete: (skill: Skill) => void;
 };
 
@@ -621,7 +629,8 @@ function SkillCategory({
 
       <div className="divide-y divide-white/10">
         {skills.map((skill) => {
-          const busy = actionId === skill.id;
+          const busy =
+            actionId === skill.id;
 
           return (
             <div
@@ -630,10 +639,9 @@ function SkillCategory({
             >
               <div className="flex min-w-0 items-center gap-4">
                 <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-white/10 text-[10px] text-white/25">
-                  {String(skill.sort_order).padStart(
-                    2,
-                    "0"
-                  )}
+                  {String(
+                    skill.sort_order
+                  ).padStart(2, "0")}
                 </span>
 
                 <div className="min-w-0">
@@ -653,7 +661,9 @@ function SkillCategory({
                 <button
                   type="button"
                   onClick={() =>
-                    onTogglePublished(skill)
+                    onTogglePublished(
+                      skill
+                    )
                   }
                   disabled={busy}
                   className={`rounded-full border px-3 py-2 text-xs transition-all disabled:opacity-40 ${
@@ -669,7 +679,9 @@ function SkillCategory({
 
                 <button
                   type="button"
-                  onClick={() => onEdit(skill)}
+                  onClick={() =>
+                    onEdit(skill)
+                  }
                   disabled={busy}
                   className="inline-flex items-center gap-1.5 rounded-full border border-white/10 px-3 py-2 text-xs text-white/40 transition-all hover:border-white/20 hover:text-white disabled:opacity-40"
                 >
@@ -679,7 +691,9 @@ function SkillCategory({
 
                 <button
                   type="button"
-                  onClick={() => onDelete(skill)}
+                  onClick={() =>
+                    onDelete(skill)
+                  }
                   disabled={busy}
                   className="inline-flex items-center gap-1.5 rounded-full border border-red-400/10 px-3 py-2 text-xs text-red-300/50 transition-all hover:border-red-400/25 hover:bg-red-400/5 hover:text-red-300 disabled:opacity-40"
                 >

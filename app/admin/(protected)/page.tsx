@@ -8,26 +8,15 @@ import {
   Code2,
   FolderKanban,
   GraduationCap,
-  Inbox,
   LogOut,
   Mail,
   MessageSquare,
   Settings,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { createBrowserClient } from "@supabase/ssr";
+import { createClient } from "@/lib/supabase/client";
 
-const supabaseUrl =
-  process.env.NEXT_PUBLIC_SUPABASE_URL!;
-
-const supabasePublishableKey =
-  process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!;
-
-const supabase = createBrowserClient(
-  supabaseUrl,
-  supabasePublishableKey
-);
-
+const supabase = createClient();
 
 type Message = {
   id: string;
@@ -39,18 +28,10 @@ type Message = {
   created_at: string;
 };
 
-
-type PortfolioSettings = {
-  name: string | null;
-};
-
-
 export default function AdminDashboard() {
   const router = useRouter();
 
-  const [messages, setMessages] =
-    useState<Message[]>([]);
-
+  const [messages, setMessages] = useState<Message[]>([]);
   const [projectCount, setProjectCount] =
     useState<number>(0);
 
@@ -63,100 +44,67 @@ export default function AdminDashboard() {
   const [skillCount, setSkillCount] =
     useState<number>(0);
 
-  const [profileName, setProfileName] =
-    useState("Aman Nidhi");
-
   const [isLoading, setIsLoading] =
     useState(true);
 
   const [isLoggingOut, setIsLoggingOut] =
     useState(false);
 
-
   useEffect(() => {
-    let isMounted = true;
-
     async function loadDashboard() {
-      setIsLoading(true);
-
-
-      /*
-       * Check current authenticated user.
-       */
       const {
         data: { session },
-        error: sessionError,
       } = await supabase.auth.getSession();
 
-
-      if (
-        sessionError ||
-        !session
-      ) {
-        if (isMounted) {
-          router.replace(
-            "/admin/login"
-          );
-        }
-
+      if (!session) {
+        router.replace("/admin/login");
         return;
       }
 
-
       /*
-       * Load messages.
+       * Load messages
        */
-      const {
-        data: messageData,
-      } = await supabase
-        .from("contact_messages")
-        .select("*")
-        .order("created_at", {
-          ascending: false,
-        });
 
+      const { data: messageData } =
+        await supabase
+          .from("contact_messages")
+          .select("*")
+          .order("created_at", {
+            ascending: false,
+          });
 
-      if (
-        messageData &&
-        isMounted
-      ) {
-        setMessages(
-          messageData
-        );
+      if (messageData) {
+        setMessages(messageData);
       }
 
+      /*
+       * Load project count
+       */
+
+      const { count: projectsCount } =
+        await supabase
+          .from("projects")
+          .select("id", {
+            count: "exact",
+            head: true,
+          });
 
       /*
-       * Load published project count.
+       * Load education count
        */
-      const {
-        count: projectsCount,
-      } = await supabase
-        .from("projects")
-        .select("id", {
-          count: "exact",
-          head: true,
-        })
-        .eq("published", true);
 
+      const { count: educationTotal } =
+        await supabase
+          .from("education")
+          .select("id", {
+            count: "exact",
+            head: true,
+          });
 
       /*
-       * Load published education count.
+       * Load certification count
        */
-      const {
-        count: educationTotal,
-      } = await supabase
-        .from("education")
-        .select("id", {
-          count: "exact",
-          head: true,
-        })
-        .eq("published", true);
 
-
-      /*
-       * Load published certification count.
-       */
       const {
         count: certificationsTotal,
       } = await supabase
@@ -164,100 +112,54 @@ export default function AdminDashboard() {
         .select("id", {
           count: "exact",
           head: true,
-        })
-        .eq("published", true);
-
+        });
 
       /*
-       * Load published skills count.
+       * Load skills count
        */
-      const {
-        count: skillsTotal,
-      } = await supabase
-        .from("portfolio_skills")
-        .select("id", {
-          count: "exact",
-          head: true,
-        })
-        .eq("published", true);
 
+      const { count: skillsTotal } =
+        await supabase
+          .from("portfolio_skills")
+          .select("id", {
+            count: "exact",
+            head: true,
+          })
+          .eq("published", true);
 
-      /*
-       * Load portfolio name.
-       */
-      const {
-        data: settingsData,
-      } = await supabase
-        .from("portfolio_settings")
-        .select("name")
-        .limit(1)
-        .maybeSingle();
+      setProjectCount(
+        projectsCount ?? 0
+      );
 
+      setEducationCount(
+        educationTotal ?? 0
+      );
 
-      if (
-        isMounted &&
-        settingsData
-      ) {
-        setProfileName(
-          settingsData.name ||
-            "Aman Nidhi"
-        );
-      }
+      setCertificationCount(
+        certificationsTotal ?? 0
+      );
 
+      setSkillCount(
+        skillsTotal ?? 0
+      );
 
-      if (isMounted) {
-        setProjectCount(
-          projectsCount ?? 0
-        );
-
-        setEducationCount(
-          educationTotal ?? 0
-        );
-
-        setCertificationCount(
-          certificationsTotal ?? 0
-        );
-
-        setSkillCount(
-          skillsTotal ?? 0
-        );
-
-        setIsLoading(false);
-      }
+      setIsLoading(false);
     }
 
-
     loadDashboard();
-
-
-    return () => {
-      isMounted = false;
-    };
   }, [router]);
-
 
   async function handleLogout() {
     setIsLoggingOut(true);
 
     await supabase.auth.signOut();
 
-    window.location.href =
-      "/admin/login";
+    router.replace("/admin/login");
   }
-
-
-  const unreadMessages =
-    messages.filter(
-      (message) =>
-        message.status ===
-        "unread"
-    ).length;
-
 
   return (
     <main className="admin-page">
       <div className="admin-container">
-
 
         {/* =====================================
             HEADER
@@ -268,7 +170,7 @@ export default function AdminDashboard() {
           <div>
 
             <p className="eyebrow">
-              {profileName.toUpperCase()} / ADMIN
+              AMAN NIDHI / ADMIN
             </p>
 
             <h1>
@@ -282,7 +184,6 @@ export default function AdminDashboard() {
 
           </div>
 
-
           <div className="admin-header-actions">
 
             <Link
@@ -292,7 +193,6 @@ export default function AdminDashboard() {
               View site
               <ArrowUpRight size={15} />
             </Link>
-
 
             <button
               type="button"
@@ -312,15 +212,15 @@ export default function AdminDashboard() {
         </header>
 
 
-
         {/* =====================================
             MAIN STATS
         ===================================== */}
 
         <section className="admin-stats">
 
-
-          {/* TOTAL MESSAGES */}
+          {/* =================================
+              TOTAL MESSAGES
+          ================================= */}
 
           <Link
             href="/admin/messages"
@@ -353,42 +253,9 @@ export default function AdminDashboard() {
           </Link>
 
 
-
-          {/* UNREAD MESSAGES */}
-
-          <Link
-            href="/admin/messages"
-            className="admin-stat-card admin-stat-link"
-          >
-
-            <div className="admin-stat-icon">
-              <Inbox size={18} />
-            </div>
-
-            <div>
-
-              <p>
-                Unread messages
-              </p>
-
-              <strong>
-                {isLoading
-                  ? "—"
-                  : unreadMessages}
-              </strong>
-
-            </div>
-
-            <ArrowUpRight
-              className="admin-stat-arrow"
-              size={15}
-            />
-
-          </Link>
-
-
-
-          {/* PROJECTS */}
+          {/* =================================
+              PROJECTS
+          ================================= */}
 
           <Link
             href="/admin/projects"
@@ -402,7 +269,7 @@ export default function AdminDashboard() {
             <div>
 
               <p>
-                Published projects
+                Projects
               </p>
 
               <strong>
@@ -421,8 +288,44 @@ export default function AdminDashboard() {
           </Link>
 
 
+          {/* =================================
+              SKILLS
+          ================================= */}
 
-          {/* EDUCATION */}
+          <Link
+            href="/admin/skills"
+            className="admin-stat-card admin-stat-link"
+          >
+
+            <div className="admin-stat-icon">
+              <Code2 size={18} />
+            </div>
+
+            <div>
+
+              <p>
+                Skills
+              </p>
+
+              <strong>
+                {isLoading
+                  ? "—"
+                  : skillCount}
+              </strong>
+
+            </div>
+
+            <ArrowUpRight
+              className="admin-stat-arrow"
+              size={15}
+            />
+
+          </Link>
+
+
+          {/* =================================
+              EDUCATION
+          ================================= */}
 
           <Link
             href="/admin/education"
@@ -436,7 +339,7 @@ export default function AdminDashboard() {
             <div>
 
               <p>
-                Published education
+                Education
               </p>
 
               <strong>
@@ -455,8 +358,9 @@ export default function AdminDashboard() {
           </Link>
 
 
-
-          {/* CERTIFICATIONS */}
+          {/* =================================
+              CERTIFICATIONS
+          ================================= */}
 
           <Link
             href="/admin/certifications"
@@ -470,7 +374,7 @@ export default function AdminDashboard() {
             <div>
 
               <p>
-                Published certifications
+                Certifications
               </p>
 
               <strong>
@@ -489,8 +393,9 @@ export default function AdminDashboard() {
           </Link>
 
 
-
-          {/* PORTFOLIO SETTINGS */}
+          {/* =================================
+              PORTFOLIO SETTINGS
+          ================================= */}
 
           <Link
             href="/admin/settings"
@@ -523,57 +428,11 @@ export default function AdminDashboard() {
         </section>
 
 
-
-        {/* =====================================
-            COMPACT SKILLS BLOCK
-        ===================================== */}
-
-        <div className="admin-skills-mini-wrap">
-
-          <Link
-            href="/admin/skills"
-            className="admin-skills-mini admin-stat-link"
-          >
-
-            <div className="admin-skills-mini-icon">
-              <Code2 size={17} />
-            </div>
-
-            <div className="admin-skills-mini-content">
-
-              <p>
-                Skills
-              </p>
-
-              <strong>
-                {isLoading
-                  ? "—"
-                  : skillCount}
-              </strong>
-
-            </div>
-
-            <span className="admin-skills-mini-label">
-              Manage skills
-            </span>
-
-            <ArrowUpRight
-              className="admin-skills-mini-arrow"
-              size={15}
-            />
-
-          </Link>
-
-        </div>
-
-
-
         {/* =====================================
             DASHBOARD GRID
         ===================================== */}
 
         <section className="admin-grid">
-
 
           {/* ===================================
               MESSAGES
@@ -679,7 +538,6 @@ export default function AdminDashboard() {
           </div>
 
 
-
           {/* ===================================
               QUICK ACTIONS
           =================================== */}
@@ -704,7 +562,6 @@ export default function AdminDashboard() {
 
 
             <div className="admin-actions">
-
 
               {/* MESSAGES */}
 
@@ -732,7 +589,6 @@ export default function AdminDashboard() {
                 <ArrowUpRight size={16} />
 
               </Link>
-
 
 
               {/* PROJECTS */}
@@ -763,7 +619,6 @@ export default function AdminDashboard() {
               </Link>
 
 
-
               {/* EDUCATION */}
 
               <Link
@@ -790,7 +645,6 @@ export default function AdminDashboard() {
                 <ArrowUpRight size={16} />
 
               </Link>
-
 
 
               {/* CERTIFICATIONS */}
@@ -821,69 +675,10 @@ export default function AdminDashboard() {
               </Link>
 
 
-
-              {/* SKILLS */}
-
-              <Link
-                href="/admin/skills"
-                className="admin-action"
-              >
-
-                <div>
-                  <Code2 size={18} />
-                </div>
-
-                <span>
-
-                  <strong>
-                    Manage skills
-                  </strong>
-
-                  <small>
-                    Add and edit technical skills
-                  </small>
-
-                </span>
-
-                <ArrowUpRight size={16} />
-
-              </Link>
-
-
-
-              {/* PORTFOLIO SETTINGS */}
-
-              <Link
-                href="/admin/settings"
-                className="admin-action"
-              >
-
-                <div>
-                  <Settings size={18} />
-                </div>
-
-                <span>
-
-                  <strong>
-                    Portfolio settings
-                  </strong>
-
-                  <small>
-                    Manage profile and site content
-                  </small>
-
-                </span>
-
-                <ArrowUpRight size={16} />
-
-              </Link>
-
-
-
               {/* PUBLIC PORTFOLIO */}
 
               <Link
-                href="/"
+                href="/projects"
                 className="admin-action"
               >
 
@@ -898,7 +693,7 @@ export default function AdminDashboard() {
                   </strong>
 
                   <small>
-                    Open the public portfolio
+                    Open the public project page
                   </small>
 
                 </span>
@@ -914,7 +709,6 @@ export default function AdminDashboard() {
         </section>
 
 
-
         {/* =====================================
             FOOTER
         ===================================== */}
@@ -922,7 +716,7 @@ export default function AdminDashboard() {
         <footer className="admin-footer">
 
           <span>
-            {profileName.toUpperCase()}. ADMIN
+            AMAN. ADMIN
           </span>
 
           <Link href="/">

@@ -2,19 +2,15 @@
 
 import { FormEvent, useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, LockKeyhole } from "lucide-react";
-import { createBrowserClient } from "@supabase/ssr";
+import { ArrowLeft, LockKeyhole, Loader2 } from "lucide-react";
+import { useRouter } from "next/navigation";
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabasePublishableKey =
-  process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!;
-
-const supabase = createBrowserClient(
-  supabaseUrl,
-  supabasePublishableKey
-);
+import { createClient } from "@/lib/supabase/client";
 
 export default function AdminLoginPage() {
+  const router = useRouter();
+  const supabase = createClient();
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
@@ -26,41 +22,31 @@ export default function AdminLoginPage() {
   ) {
     event.preventDefault();
 
-    setIsLoading(true);
     setError("");
+    setIsLoading(true);
 
-    const { error } =
-      await supabase.auth.signInWithPassword({
-        email: email.trim(),
-        password,
-      });
+    const cleanEmail = email.trim();
+
+    const { error } = await supabase.auth.signInWithPassword({
+      email: cleanEmail,
+      password,
+    });
 
     if (error) {
       setError(
-        error.message ||
-          "Invalid email or password."
+        error.message || "Invalid email or password."
       );
-
       setIsLoading(false);
       return;
     }
 
-    /*
-     * Full page navigation is intentional here.
-     *
-     * It allows the browser session cookies to be
-     * available before the protected admin route
-     * is loaded.
-     */
-    window.location.href = "/admin";
+    router.replace("/admin");
+    router.refresh();
   }
 
   return (
     <main className="admin-login-page">
       <div className="admin-login-container">
-
-        {/* BACK TO PORTFOLIO */}
-
         <Link
           href="/"
           className="admin-back-link"
@@ -69,11 +55,7 @@ export default function AdminLoginPage() {
           Back to portfolio
         </Link>
 
-
-        {/* LOGIN CARD */}
-
         <div className="admin-login-card">
-
           <div className="admin-login-icon">
             <LockKeyhole size={20} />
           </div>
@@ -82,27 +64,18 @@ export default function AdminLoginPage() {
             ADMIN ACCESS
           </p>
 
-          <h1>
-            Welcome back.
-          </h1>
+          <h1>Welcome back.</h1>
 
           <p className="admin-login-description">
             Sign in to manage your portfolio,
             projects and messages.
           </p>
 
-
-          {/* LOGIN FORM */}
-
           <form
             onSubmit={handleLogin}
             className="admin-login-form"
           >
-
-            {/* EMAIL */}
-
             <div className="form-field">
-
               <label htmlFor="admin-email">
                 Email
               </label>
@@ -118,14 +91,9 @@ export default function AdminLoginPage() {
                 autoComplete="email"
                 required
               />
-
             </div>
 
-
-            {/* PASSWORD */}
-
             <div className="form-field">
-
               <label htmlFor="admin-password">
                 Password
               </label>
@@ -141,11 +109,7 @@ export default function AdminLoginPage() {
                 autoComplete="current-password"
                 required
               />
-
             </div>
-
-
-            {/* ERROR */}
 
             {error && (
               <p className="admin-login-error">
@@ -153,23 +117,25 @@ export default function AdminLoginPage() {
               </p>
             )}
 
-
-            {/* SUBMIT */}
-
             <button
               type="submit"
               className="admin-login-button"
               disabled={isLoading}
             >
-              {isLoading
-                ? "Signing in..."
-                : "Sign in"}
+              {isLoading ? (
+                <>
+                  <Loader2
+                    size={16}
+                    className="animate-spin"
+                  />
+                  Signing in...
+                </>
+              ) : (
+                "Sign in"
+              )}
             </button>
-
           </form>
-
         </div>
-
       </div>
     </main>
   );

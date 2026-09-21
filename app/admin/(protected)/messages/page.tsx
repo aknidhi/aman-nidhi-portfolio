@@ -11,17 +11,8 @@ import {
   MailOpen,
   Trash2,
 } from "lucide-react";
-import { useRouter } from "next/navigation";
-import { createClient } from "@supabase/supabase-js";
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabasePublishableKey =
-  process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!;
-
-const supabase = createClient(
-  supabaseUrl,
-  supabasePublishableKey
-);
+import { createClient } from "@/lib/supabase/client";
 
 type Message = {
   id: string;
@@ -34,45 +25,26 @@ type Message = {
 };
 
 export default function AdminMessagesPage() {
-  const router = useRouter();
+  const supabase = createClient();
 
-  const [messages, setMessages] = useState<Message[]>([]);
+  const [messages, setMessages] = useState<Message[]>(
+    []
+  );
+
   const [selectedMessage, setSelectedMessage] =
     useState<Message | null>(null);
 
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] =
+    useState(true);
+
   const [actionId, setActionId] =
     useState<string | null>(null);
 
   const [error, setError] = useState("");
 
-  async function refreshSession() {
-    const {
-      data: { session },
-      error: refreshError,
-    } = await supabase.auth.refreshSession();
-
-    if (refreshError || !session) {
-      setError(
-        "Your admin session has expired. Please log in again."
-      );
-
-      return null;
-    }
-
-    return session;
-  }
-
   async function loadMessages() {
     setIsLoading(true);
     setError("");
-
-    const session = await refreshSession();
-
-    if (!session) {
-      setIsLoading(false);
-      return;
-    }
 
     const {
       data,
@@ -112,13 +84,6 @@ export default function AdminMessagesPage() {
   ) {
     setActionId(message.id);
     setError("");
-
-    const session = await refreshSession();
-
-    if (!session) {
-      setActionId(null);
-      return;
-    }
 
     const {
       error: updateError,
@@ -161,7 +126,9 @@ export default function AdminMessagesPage() {
     setActionId(null);
   }
 
-  async function openMessage(message: Message) {
+  async function openMessage(
+    message: Message
+  ) {
     setSelectedMessage(message);
 
     if (message.status === "unread") {
@@ -185,13 +152,6 @@ export default function AdminMessagesPage() {
 
     setActionId(message.id);
     setError("");
-
-    const session = await refreshSession();
-
-    if (!session) {
-      setActionId(null);
-      return;
-    }
 
     const {
       error: deleteError,
@@ -234,9 +194,9 @@ export default function AdminMessagesPage() {
         .messages-layout {
           display: grid;
           grid-template-columns: minmax(0, 1.15fr) minmax(
-              320px,
-              0.85fr
-            );
+            320px,
+            0.85fr
+          );
           gap: 20px;
           align-items: start;
         }
@@ -421,7 +381,6 @@ export default function AdminMessagesPage() {
 
       <main className="admin-page">
         <div className="admin-container">
-
           <header className="admin-header admin-subpage-header">
             <div>
               <Link
@@ -471,9 +430,7 @@ export default function AdminMessagesPage() {
           )}
 
           <section className="messages-layout">
-
             <div className="admin-panel messages-list-panel">
-
               <div className="admin-panel-header">
                 <div>
                   <p className="eyebrow">
@@ -515,7 +472,6 @@ export default function AdminMessagesPage() {
                       }
                     >
                       <div className="message-list-main">
-
                         <div className="message-list-title">
                           <strong>
                             {message.subject}
@@ -541,26 +497,21 @@ export default function AdminMessagesPage() {
                             message.created_at
                           ).toLocaleString()}
                         </time>
-
                       </div>
                     </button>
                   ))}
                 </div>
               )}
-
             </div>
 
             <div className="admin-panel message-detail-panel">
-
               <div className="admin-panel-header">
                 <div>
                   <p className="eyebrow">
                     MESSAGE
                   </p>
 
-                  <h2>
-                    Details
-                  </h2>
+                  <h2>Details</h2>
                 </div>
               </div>
 
@@ -574,9 +525,7 @@ export default function AdminMessagesPage() {
                 </div>
               ) : (
                 <div className="message-detail">
-
                   <div className="message-detail-header">
-
                     <div
                       style={{
                         display: "flex",
@@ -615,7 +564,6 @@ export default function AdminMessagesPage() {
                         {selectedMessage.email}
                       </a>
                     </p>
-
                   </div>
 
                   <div className="message-detail-body">
@@ -630,7 +578,6 @@ export default function AdminMessagesPage() {
                   </time>
 
                   <div className="message-detail-actions">
-
                     <a
                       href={`https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(
                         selectedMessage.email
@@ -701,26 +648,19 @@ export default function AdminMessagesPage() {
                       <Trash2 size={14} />
                       Delete
                     </button>
-
                   </div>
-
                 </div>
               )}
-
             </div>
-
           </section>
 
           <footer className="admin-footer">
-            <span>
-              AMAN. ADMIN
-            </span>
+            <span>AMAN. ADMIN</span>
 
             <Link href="/admin">
               Back to dashboard
             </Link>
           </footer>
-
         </div>
       </main>
     </>

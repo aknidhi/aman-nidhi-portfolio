@@ -9,17 +9,9 @@ import {
   Plus,
   Trash2,
 } from "lucide-react";
-import { useRouter } from "next/navigation";
-import { createClient } from "@supabase/supabase-js";
+import { createClient } from "@/lib/supabase/client";
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabasePublishableKey =
-  process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!;
-
-const supabase = createClient(
-  supabaseUrl,
-  supabasePublishableKey
-);
+const supabase = createClient();
 
 type Education = {
   id: string;
@@ -63,8 +55,6 @@ const emptyForm: FormState = {
 };
 
 export default function AdminEducationPage() {
-  const router = useRouter();
-
   const [education, setEducation] = useState<Education[]>([]);
   const [form, setForm] = useState<FormState>(emptyForm);
 
@@ -77,32 +67,9 @@ export default function AdminEducationPage() {
 
   const [error, setError] = useState("");
 
-  async function refreshSession() {
-    const {
-      data: { session },
-      error: refreshError,
-    } = await supabase.auth.refreshSession();
-
-    if (refreshError || !session) {
-      setError(
-        "Your admin session has expired. Please log in again."
-      );
-      return null;
-    }
-
-    return session;
-  }
-
   async function loadEducation() {
     setIsLoading(true);
     setError("");
-
-    const session = await refreshSession();
-
-    if (!session) {
-      setIsLoading(false);
-      return;
-    }
 
     const { data, error: loadError } = await supabase
       .from("education")
@@ -181,13 +148,6 @@ export default function AdminEducationPage() {
     setIsSaving(true);
     setError("");
 
-    const session = await refreshSession();
-
-    if (!session) {
-      setIsSaving(false);
-      return;
-    }
-
     const payload = {
       institution: form.institution.trim(),
       degree: form.degree.trim(),
@@ -211,6 +171,7 @@ export default function AdminEducationPage() {
       setError(
         "Institution, degree and start year are required."
       );
+
       setIsSaving(false);
       return;
     }
@@ -225,6 +186,7 @@ export default function AdminEducationPage() {
         setError(
           `Unable to update education: ${updateError.message}`
         );
+
         setIsSaving(false);
         return;
       }
@@ -237,6 +199,7 @@ export default function AdminEducationPage() {
         setError(
           `Unable to create education: ${insertError.message}`
         );
+
         setIsSaving(false);
         return;
       }
@@ -252,13 +215,6 @@ export default function AdminEducationPage() {
     setActionId(item.id);
     setError("");
 
-    const session = await refreshSession();
-
-    if (!session) {
-      setActionId(null);
-      return;
-    }
-
     const { error: updateError } = await supabase
       .from("education")
       .update({
@@ -271,6 +227,7 @@ export default function AdminEducationPage() {
       setError(
         `Unable to update education: ${updateError.message}`
       );
+
       setActionId(null);
       return;
     }
@@ -301,13 +258,6 @@ export default function AdminEducationPage() {
     setActionId(item.id);
     setError("");
 
-    const session = await refreshSession();
-
-    if (!session) {
-      setActionId(null);
-      return;
-    }
-
     const { error: deleteError } = await supabase
       .from("education")
       .delete()
@@ -317,6 +267,7 @@ export default function AdminEducationPage() {
       setError(
         `Unable to delete education: ${deleteError.message}`
       );
+
       setActionId(null);
       return;
     }
@@ -520,7 +471,6 @@ export default function AdminEducationPage() {
 
       <main className="admin-page">
         <div className="admin-container">
-
           <header className="admin-header admin-subpage-header">
             <div>
               <Link
@@ -582,7 +532,6 @@ export default function AdminEducationPage() {
                 onSubmit={handleSave}
               >
                 <div className="education-form-grid">
-
                   <div className="form-field">
                     <label htmlFor="institution">
                       Institution
@@ -940,7 +889,6 @@ export default function AdminEducationPage() {
               Back to dashboard
             </Link>
           </footer>
-
         </div>
       </main>
     </>

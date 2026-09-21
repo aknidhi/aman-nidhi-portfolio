@@ -17,16 +17,8 @@ import {
   X,
 } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { createClient } from "@supabase/supabase-js";
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabasePublishableKey =
-  process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!;
-
-const supabase = createClient(
-  supabaseUrl,
-  supabasePublishableKey
-);
+import { createClient } from "@/lib/supabase/client";
 
 type Project = {
   id: string;
@@ -94,129 +86,77 @@ type TextField =
   | "sort_order";
 
 export default function AdminProjectsPage() {
+  const supabase = createClient();
+
   const router = useRouter();
   const searchParams = useSearchParams();
   const editProjectId = searchParams.get("edit");
 
-  const [projects, setProjects] = useState<Project[]>([]);
-  const [showForm, setShowForm] = useState(false);
-  const [editingProjectId, setEditingProjectId] = useState<string | null>(null);
-  const [form, setForm] = useState(emptyForm);
+  const [projects, setProjects] =
+    useState<Project[]>([]);
 
-  const [selectedImages, setSelectedImages] = useState<File[]>(
-    []
-  );
+  const [showForm, setShowForm] =
+    useState(false);
 
-  const [existingImages, setExistingImages] = useState<ProjectImage[]>([]);
+  const [editingProjectId, setEditingProjectId] =
+    useState<string | null>(null);
 
-  /*
-   * Keeps track of fields that the user has actually typed into.
-   *
-   * This allows:
-   * Empty untouched field -> dark
-   * User types -> white
-   * User clicks elsewhere -> stays white
-   * User clears field -> dark again
-   */
-  const [filledFields, setFilledFields] = useState<
-    Set<TextField>
-  >(new Set());
+  const [form, setForm] =
+    useState(emptyForm);
 
-  const [isLoading, setIsLoading] = useState(true);
-  const [isSaving, setIsSaving] = useState(false);
-  const [actionId, setActionId] = useState<string | null>(
-    null
-  );
+  const [selectedImages, setSelectedImages] =
+    useState<File[]>([]);
+
+  const [existingImages, setExistingImages] =
+    useState<ProjectImage[]>([]);
+
+  const [filledFields, setFilledFields] =
+    useState<Set<TextField>>(new Set());
+
+  const [isLoading, setIsLoading] =
+    useState(true);
+
+  const [isSaving, setIsSaving] =
+    useState(false);
+
+  const [actionId, setActionId] =
+    useState<string | null>(null);
+
   const [error, setError] = useState("");
 
   /*
-   * Load projects from Supabase.
+   * Load projects.
    *
-   * IMPORTANT:
-   * We refresh the Supabase session before querying the
-   * projects table. This prevents the "JWT expired" problem.
+   * Authentication is handled by the protected
+   * admin route and Supabase proxy.
+   *
+   * This page does NOT refresh or redirect the
+   * admin session itself.
    */
   async function loadProjects() {
     setError("");
 
-    const {
-      data: { session: currentSession },
-    } = await supabase.auth.getSession();
-
-    let session = currentSession;
-
-    console.log("ADMIN SESSION BEFORE REFRESH:", {
-      exists: !!session,
-      email: session?.user?.email,
-      userId: session?.user?.id,
-    });
-
-    if (!session) {
-      setError(
-        "No admin session found. Please log in again."
-      );
-      setIsLoading(false);
-      return;
-    }
-
-    /*
-     * Refresh the session before accessing the database.
-     *
-     * Supabase will use the refresh token to obtain a new
-     * access token when the current JWT has expired.
-     */
-    const {
-      data: { session: refreshedSession },
-      error: refreshError,
-    } = await supabase.auth.refreshSession();
-
-    if (refreshError) {
-      console.error(
-        "SESSION REFRESH ERROR:",
-        refreshError
-      );
-
-      setError(
-        "Your admin session has expired. Please log in again."
-      );
-
-      setIsLoading(false);
-      return;
-    }
-
-    session = refreshedSession;
-
-    console.log("ADMIN SESSION AFTER REFRESH:", {
-      exists: !!session,
-      email: session?.user?.email,
-      userId: session?.user?.id,
-    });
-
-    if (!session) {
-      setError(
-        "Unable to refresh your admin session. Please log in again."
-      );
-      setIsLoading(false);
-      return;
-    }
-
-    /*
-     * Now query projects using the refreshed authentication
-     * session.
-     */
-    const { data, error } = await supabase
-      .from("projects")
-      .select("*")
-      .order("sort_order", { ascending: true })
-      .order("created_at", { ascending: false });
+    const { data, error } =
+      await supabase
+        .from("projects")
+        .select("*")
+        .order("sort_order", {
+          ascending: true,
+        })
+        .order("created_at", {
+          ascending: false,
+        });
 
     if (error) {
-      console.error("PROJECT LOAD ERROR:", {
-        message: error.message,
-        details: error.details,
-        hint: error.hint,
-        code: error.code,
-      });
+      console.error(
+        "PROJECT LOAD ERROR:",
+        {
+          message: error.message,
+          details: error.details,
+          hint: error.hint,
+          code: error.code,
+        }
+      );
 
       setError(
         `Unable to load projects: ${error.message}${
@@ -250,27 +190,23 @@ export default function AdminProjectsPage() {
     loadProjectForEdit(editProjectId);
   }, [editProjectId]);
 
-  async function loadProjectForEdit(projectId: string) {
+  async function loadProjectForEdit(
+    projectId: string
+  ) {
     setError("");
 
-    const {
-      data: { session },
-      error: refreshError,
-    } = await supabase.auth.refreshSession();
-
-    if (refreshError || !session) {
-      setError("Your admin session has expired. Please log in again.");
-      return;
-    }
-
-    const { data, error } = await supabase
-      .from("projects")
-      .select("*")
-      .eq("id", projectId)
-      .single();
+    const { data, error } =
+      await supabase
+        .from("projects")
+        .select("*")
+        .eq("id", projectId)
+        .single();
 
     if (error || !data) {
-      setError(error?.message || "Unable to load the selected project.");
+      setError(
+        error?.message ||
+          "Unable to load the selected project."
+      );
       return;
     }
 
@@ -279,82 +215,104 @@ export default function AdminProjectsPage() {
     setForm({
       title: project.title || "",
       slug: project.slug || "",
-      short_description: project.short_description || "",
+      short_description:
+        project.short_description || "",
       description: project.description || "",
       category: project.category || "",
       year: project.year || "",
       github: project.github || "",
       live: project.live || "",
-      technologies: Array.isArray(project.technologies)
-        ? project.technologies.join(", ")
-        : "",
-      features: Array.isArray(project.features)
-        ? project.features.join(", ")
-        : "",
-      problem_title: project.problem_title || "",
-      problem_description: project.problem_description || "",
-      solution_title: project.solution_title || "",
-      solution_description: project.solution_description || "",
-      sort_order: String(project.sort_order ?? 0),
+      technologies:
+        Array.isArray(project.technologies)
+          ? project.technologies.join(", ")
+          : "",
+      features:
+        Array.isArray(project.features)
+          ? project.features.join(", ")
+          : "",
+      problem_title:
+        project.problem_title || "",
+      problem_description:
+        project.problem_description || "",
+      solution_title:
+        project.solution_title || "",
+      solution_description:
+        project.solution_description || "",
+      sort_order: String(
+        project.sort_order ?? 0
+      ),
       published: project.published,
     });
 
-    setFilledFields(new Set([
-      "title",
-      "slug",
-      "short_description",
-      "description",
-      "category",
-      "year",
-      "github",
-      ...(project.live ? ["live" as TextField] : []),
-      ...(project.technologies?.length ? ["technologies" as TextField] : []),
-      ...(project.features?.length ? ["features" as TextField] : []),
-      "problem_title",
-      "problem_description",
-      "solution_title",
-      "solution_description",
-      "sort_order",
-    ]));
+    setFilledFields(
+      new Set([
+        "title",
+        "slug",
+        "short_description",
+        "description",
+        "category",
+        "year",
+        "github",
+        ...(project.live
+          ? ["live" as TextField]
+          : []),
+        ...(project.technologies?.length
+          ? ["technologies" as TextField]
+          : []),
+        ...(project.features?.length
+          ? ["features" as TextField]
+          : []),
+        "problem_title",
+        "problem_description",
+        "solution_title",
+        "solution_description",
+        "sort_order",
+      ])
+    );
 
     const {
       data: imageData,
       error: imageError,
     } = await supabase
       .from("project_images")
-      .select("id, storage_path, alt, sort_order")
+      .select(
+        "id, storage_path, alt, sort_order"
+      )
       .eq("project_id", project.id)
-      .order("sort_order", { ascending: true });
+      .order("sort_order", {
+        ascending: true,
+      });
 
     if (imageError) {
-      console.error("PROJECT IMAGE LOAD ERROR:", {
-        message: imageError.message,
-        details: imageError.details,
-        hint: imageError.hint,
-        code: imageError.code,
-        projectId: project.id,
-      });
+      console.error(
+        "PROJECT IMAGE LOAD ERROR:",
+        {
+          message: imageError.message,
+          details: imageError.details,
+          hint: imageError.hint,
+          code: imageError.code,
+          projectId: project.id,
+        }
+      );
 
       setError(
         `Project loaded, but screenshots could not be loaded: ${imageError.message}`
       );
     }
 
-    const loadedImages: ProjectImage[] = (imageData || []).map((image) => ({
-      id: image.id,
-      storage_path: image.storage_path,
-      alt: image.alt,
-      sort_order: image.sort_order,
-      public_url: supabase.storage
-        .from("project-images")
-        .getPublicUrl(image.storage_path).data.publicUrl,
-    }));
-
-    console.log("PROJECT IMAGES LOADED:", {
-      projectId: project.id,
-      count: loadedImages.length,
-      images: loadedImages,
-    });
+    const loadedImages: ProjectImage[] =
+      (imageData || []).map((image) => ({
+        id: image.id,
+        storage_path: image.storage_path,
+        alt: image.alt,
+        sort_order: image.sort_order,
+        public_url:
+          supabase.storage
+            .from("project-images")
+            .getPublicUrl(
+              image.storage_path
+            ).data.publicUrl,
+      }));
 
     setEditingProjectId(project.id);
     setShowForm(true);
@@ -362,12 +320,6 @@ export default function AdminProjectsPage() {
     setExistingImages(loadedImages);
   }
 
-  /*
-   * Update a text field.
-   *
-   * Once the user enters text, the field remains white
-   * even after losing focus.
-   */
   function updateTextField(
     field: TextField,
     value: string
@@ -400,13 +352,12 @@ export default function AdminProjectsPage() {
     }));
   }
 
-  function isFieldFilled(field: TextField) {
+  function isFieldFilled(
+    field: TextField
+  ) {
     return filledFields.has(field);
   }
 
-  /*
-   * Handle image selection.
-   */
   function handleImageSelection(
     event: ChangeEvent<HTMLInputElement>
   ) {
@@ -418,19 +369,23 @@ export default function AdminProjectsPage() {
       return;
     }
 
-    const validFiles = files.filter((file) => {
-      if (!file.type.startsWith("image/")) {
-        return false;
+    const validFiles = files.filter(
+      (file) => {
+        if (!file.type.startsWith("image/")) {
+          return false;
+        }
+
+        if (file.size > 10 * 1024 * 1024) {
+          return false;
+        }
+
+        return true;
       }
+    );
 
-      if (file.size > 10 * 1024 * 1024) {
-        return false;
-      }
-
-      return true;
-    });
-
-    if (validFiles.length !== files.length) {
+    if (
+      validFiles.length !== files.length
+    ) {
       setError(
         "Only image files up to 10 MB each are allowed."
       );
@@ -443,24 +398,20 @@ export default function AdminProjectsPage() {
       ...validFiles,
     ]);
 
-    /*
-     * Allows the same file to be selected again later.
-     */
     event.target.value = "";
   }
 
-  function removeSelectedImage(index: number) {
+  function removeSelectedImage(
+    index: number
+  ) {
     setSelectedImages((current) =>
       current.filter(
-        (_, imageIndex) => imageIndex !== index
+        (_, imageIndex) =>
+          imageIndex !== index
       )
     );
   }
 
-  /*
-   * Upload project screenshots to Supabase Storage
-   * and create corresponding project_images records.
-   */
   async function uploadProjectImages(
     projectId: string,
     projectSlug: string
@@ -485,23 +436,28 @@ export default function AdminProjectsPage() {
       const safeName =
         file.name
           .replace(/\.[^/.]+$/, "")
-          .replace(/[^a-zA-Z0-9-_]/g, "-")
+          .replace(
+            /[^a-zA-Z0-9-_]/g,
+            "-"
+          )
           .toLowerCase() || "image";
 
       const filePath =
         `${projectSlug}/${crypto.randomUUID()}-${safeName}.${extension}`;
 
-      /*
-       * Upload image to Supabase Storage.
-       */
-      const { error: uploadError } =
-        await supabase.storage
-          .from("project-images")
-          .upload(filePath, file, {
+      const {
+        error: uploadError,
+      } = await supabase.storage
+        .from("project-images")
+        .upload(
+          filePath,
+          file,
+          {
             cacheControl: "3600",
             upsert: false,
             contentType: file.type,
-          });
+          }
+        );
 
       if (uploadError) {
         throw new Error(
@@ -509,9 +465,6 @@ export default function AdminProjectsPage() {
         );
       }
 
-      /*
-       * Save the image information in project_images.
-       */
       const {
         error: imageRecordError,
       } = await supabase
@@ -524,7 +477,11 @@ export default function AdminProjectsPage() {
           }`,
           sort_order:
             existingImages.reduce(
-              (max, image) => Math.max(max, image.sort_order),
+              (max, image) =>
+                Math.max(
+                  max,
+                  image.sort_order
+                ),
               -1
             ) +
             index +
@@ -542,10 +499,16 @@ export default function AdminProjectsPage() {
         {
           id: `new-${crypto.randomUUID()}`,
           storage_path: filePath,
-          alt: `${form.title.trim()} screenshot ${index + 1}`,
+          alt: `${form.title.trim()} screenshot ${
+            index + 1
+          }`,
           sort_order:
             current.reduce(
-              (max, image) => Math.max(max, image.sort_order),
+              (max, image) =>
+                Math.max(
+                  max,
+                  image.sort_order
+                ),
               -1
             ) + 1,
         },
@@ -553,7 +516,9 @@ export default function AdminProjectsPage() {
     }
   }
 
-  async function deleteExistingImage(image: ProjectImage) {
+  async function deleteExistingImage(
+    image: ProjectImage
+  ) {
     const confirmed = window.confirm(
       "Delete this screenshot permanently?"
     );
@@ -565,42 +530,39 @@ export default function AdminProjectsPage() {
     setError("");
 
     const {
-      data: { session },
-      error: refreshError,
-    } = await supabase.auth.refreshSession();
-
-    if (refreshError || !session) {
-      setError("Your admin session has expired. Please log in again.");
-      return;
-    }
-
-    const { error: storageError } = await supabase.storage
+      error: storageError,
+    } = await supabase.storage
       .from("project-images")
       .remove([image.storage_path]);
 
     if (storageError) {
-      setError(`Unable to delete screenshot: ${storageError.message}`);
+      setError(
+        `Unable to delete screenshot: ${storageError.message}`
+      );
       return;
     }
 
-    const { error: recordError } = await supabase
+    const {
+      error: recordError,
+    } = await supabase
       .from("project_images")
       .delete()
       .eq("id", image.id);
 
     if (recordError) {
-      setError(`Image file deleted, but database record could not be removed: ${recordError.message}`);
+      setError(
+        `Image file deleted, but database record could not be removed: ${recordError.message}`
+      );
       return;
     }
 
     setExistingImages((current) =>
-      current.filter((item) => item.id !== image.id)
+      current.filter(
+        (item) => item.id !== image.id
+      )
     );
   }
 
-  /*
-   * Create a new project.
-   */
   async function handleCreateProject(
     event: FormEvent<HTMLFormElement>
   ) {
@@ -609,31 +571,17 @@ export default function AdminProjectsPage() {
     setIsSaving(true);
     setError("");
 
-    /*
-     * Refresh authentication before writing.
-     * This also protects the Save button from an expired JWT.
-     */
-    const {
-      data: { session },
-    } = await supabase.auth.refreshSession();
+    const technologies =
+      form.technologies
+        .split(",")
+        .map((item) => item.trim())
+        .filter(Boolean);
 
-    if (!session) {
-      setError(
-        "Your admin session has expired. Please log in again."
-      );
-      setIsSaving(false);
-      return;
-    }
-
-    const technologies = form.technologies
-      .split(",")
-      .map((item) => item.trim())
-      .filter(Boolean);
-
-    const features = form.features
-      .split(",")
-      .map((item) => item.trim())
-      .filter(Boolean);
+    const features =
+      form.features
+        .split(",")
+        .map((item) => item.trim())
+        .filter(Boolean);
 
     const {
       data: createdProject,
@@ -645,11 +593,13 @@ export default function AdminProjectsPage() {
         slug: form.slug.trim(),
         short_description:
           form.short_description.trim(),
-        description: form.description.trim(),
+        description:
+          form.description.trim(),
         category: form.category.trim(),
         year: form.year.trim(),
         github: form.github.trim(),
-        live: form.live.trim() || null,
+        live:
+          form.live.trim() || null,
         technologies,
         features,
         problem_title:
@@ -668,12 +618,15 @@ export default function AdminProjectsPage() {
       .single();
 
     if (error || !createdProject) {
-      console.error("PROJECT CREATION ERROR:", {
-        message: error?.message,
-        details: error?.details,
-        hint: error?.hint,
-        code: error?.code,
-      });
+      console.error(
+        "PROJECT CREATION ERROR:",
+        {
+          message: error?.message,
+          details: error?.details,
+          hint: error?.hint,
+          code: error?.code,
+        }
+      );
 
       setError(
         error?.message ||
@@ -686,9 +639,6 @@ export default function AdminProjectsPage() {
       return;
     }
 
-    /*
-     * Upload screenshots after project creation.
-     */
     try {
       await uploadProjectImages(
         createdProject.id,
@@ -710,9 +660,6 @@ export default function AdminProjectsPage() {
       return;
     }
 
-    /*
-     * Reset form after successful creation.
-     */
     setForm(emptyForm);
     setSelectedImages([]);
     setFilledFields(new Set());
@@ -722,9 +669,6 @@ export default function AdminProjectsPage() {
     await loadProjects();
   }
 
-  /*
-   * Update an existing project.
-   */
   async function handleUpdateProject(
     event: FormEvent<HTMLFormElement>
   ) {
@@ -737,58 +681,63 @@ export default function AdminProjectsPage() {
     setIsSaving(true);
     setError("");
 
-    const {
-      data: { session },
-      error: refreshError,
-    } = await supabase.auth.refreshSession();
+    const technologies =
+      form.technologies
+        .split(",")
+        .map((item) => item.trim())
+        .filter(Boolean);
 
-    if (refreshError || !session) {
-      setError("Your admin session has expired. Please log in again.");
-      setIsSaving(false);
-      return;
-    }
-
-    const technologies = form.technologies
-      .split(",")
-      .map((item) => item.trim())
-      .filter(Boolean);
-
-    const features = form.features
-      .split(",")
-      .map((item) => item.trim())
-      .filter(Boolean);
+    const features =
+      form.features
+        .split(",")
+        .map((item) => item.trim())
+        .filter(Boolean);
 
     const { error } = await supabase
       .from("projects")
       .update({
         title: form.title.trim(),
         slug: form.slug.trim(),
-        short_description: form.short_description.trim(),
-        description: form.description.trim(),
+        short_description:
+          form.short_description.trim(),
+        description:
+          form.description.trim(),
         category: form.category.trim(),
         year: form.year.trim(),
         github: form.github.trim(),
-        live: form.live.trim() || null,
+        live:
+          form.live.trim() || null,
         technologies,
         features,
-        problem_title: form.problem_title.trim(),
-        problem_description: form.problem_description.trim(),
-        solution_title: form.solution_title.trim(),
-        solution_description: form.solution_description.trim(),
-        sort_order: Number(form.sort_order) || 0,
+        problem_title:
+          form.problem_title.trim(),
+        problem_description:
+          form.problem_description.trim(),
+        solution_title:
+          form.solution_title.trim(),
+        solution_description:
+          form.solution_description.trim(),
+        sort_order:
+          Number(form.sort_order) || 0,
         published: form.published,
-        updated_at: new Date().toISOString(),
+        updated_at:
+          new Date().toISOString(),
       })
       .eq("id", editingProjectId);
 
     if (error) {
-      setError(`Unable to update project: ${error.message}`);
+      setError(
+        `Unable to update project: ${error.message}`
+      );
       setIsSaving(false);
       return;
     }
 
     try {
-      await uploadProjectImages(editingProjectId, form.slug.trim());
+      await uploadProjectImages(
+        editingProjectId,
+        form.slug.trim()
+      );
     } catch (imageError) {
       setError(
         imageError instanceof Error
@@ -804,33 +753,17 @@ export default function AdminProjectsPage() {
     setShowForm(false);
     setFilledFields(new Set());
     setForm(emptyForm);
+
     router.push("/admin/projects");
+
     await loadProjects();
   }
 
-  /*
-   * Publish / unpublish a project.
-   */
   async function togglePublished(
     project: Project
   ) {
     setActionId(project.id);
     setError("");
-
-    /*
-     * Make sure the authentication token is fresh.
-     */
-    const {
-      data: { session },
-    } = await supabase.auth.refreshSession();
-
-    if (!session) {
-      setError(
-        "Your admin session has expired. Please log in again."
-      );
-      setActionId(null);
-      return;
-    }
 
     const { error } = await supabase
       .from("projects")
@@ -852,7 +785,8 @@ export default function AdminProjectsPage() {
         item.id === project.id
           ? {
               ...item,
-              published: !item.published,
+              published:
+                !item.published,
             }
           : item
       )
@@ -861,10 +795,9 @@ export default function AdminProjectsPage() {
     setActionId(null);
   }
 
-  /*
-   * Delete a project.
-   */
-  async function deleteProject(project: Project) {
+  async function deleteProject(
+    project: Project
+  ) {
     const confirmed = window.confirm(
       `Delete "${project.title}" permanently?\n\nThis will also delete all screenshots belonging to this project.`
     );
@@ -878,31 +811,20 @@ export default function AdminProjectsPage() {
 
     try {
       /*
-       * Refresh authentication before deleting.
-       */
-      const {
-        data: { session },
-        error: refreshError,
-      } = await supabase.auth.refreshSession();
-
-      if (refreshError || !session) {
-        setError(
-          "Your admin session has expired. Please log in again."
-        );
-        setActionId(null);
-        return;
-      }
-
-      /*
-       * 1. Find all screenshots belonging to this project.
+       * 1. Find all screenshots.
        */
       const {
         data: projectImages,
         error: imageLoadError,
       } = await supabase
         .from("project_images")
-        .select("id, storage_path")
-        .eq("project_id", project.id);
+        .select(
+          "id, storage_path"
+        )
+        .eq(
+          "project_id",
+          project.id
+        );
 
       if (imageLoadError) {
         throw new Error(
@@ -911,18 +833,22 @@ export default function AdminProjectsPage() {
       }
 
       /*
-       * 2. Delete screenshot files from Supabase Storage.
+       * 2. Delete screenshot files.
        */
       const storagePaths =
         projectImages
-          ?.map((image) => image.storage_path)
+          ?.map(
+            (image) =>
+              image.storage_path
+          )
           .filter(Boolean) || [];
 
       if (storagePaths.length > 0) {
-        const { error: storageError } =
-          await supabase.storage
-            .from("project-images")
-            .remove(storagePaths);
+        const {
+          error: storageError,
+        } = await supabase.storage
+          .from("project-images")
+          .remove(storagePaths);
 
         if (storageError) {
           throw new Error(
@@ -932,13 +858,17 @@ export default function AdminProjectsPage() {
       }
 
       /*
-       * 3. Delete screenshot database records.
+       * 3. Delete screenshot records.
        */
-      const { error: imageRecordError } =
-        await supabase
-          .from("project_images")
-          .delete()
-          .eq("project_id", project.id);
+      const {
+        error: imageRecordError,
+      } = await supabase
+        .from("project_images")
+        .delete()
+        .eq(
+          "project_id",
+          project.id
+        );
 
       if (imageRecordError) {
         throw new Error(
@@ -947,13 +877,14 @@ export default function AdminProjectsPage() {
       }
 
       /*
-       * 4. Delete the project itself.
+       * 4. Delete project.
        */
-      const { error: projectError } =
-        await supabase
-          .from("projects")
-          .delete()
-          .eq("id", project.id);
+      const {
+        error: projectError,
+      } = await supabase
+        .from("projects")
+        .delete()
+        .eq("id", project.id);
 
       if (projectError) {
         throw new Error(
@@ -962,10 +893,13 @@ export default function AdminProjectsPage() {
       }
 
       /*
-       * 5. Remove the project from the current UI.
+       * 5. Remove from UI.
        */
       setProjects((current) =>
-        current.filter((item) => item.id !== project.id)
+        current.filter(
+          (item) =>
+            item.id !== project.id
+        )
       );
     } catch (deleteError) {
       console.error(
@@ -986,6 +920,7 @@ export default function AdminProjectsPage() {
   function closeForm() {
     setForm(emptyForm);
     setSelectedImages([]);
+    setExistingImages([]);
     setFilledFields(new Set());
     setEditingProjectId(null);
     setShowForm(false);
@@ -999,10 +934,6 @@ export default function AdminProjectsPage() {
   return (
     <>
       <style jsx global>{`
-        /* =========================================
-           PROJECT FORM INPUTS
-           ========================================= */
-
         .project-admin-form
           input:not([type="checkbox"]),
         .project-admin-form textarea,
@@ -1013,9 +944,6 @@ export default function AdminProjectsPage() {
             border-color 0.18s ease;
         }
 
-        /*
-         * Empty field while focused.
-         */
         .project-admin-form
           input:not([type="checkbox"]):focus,
         .project-admin-form textarea:focus,
@@ -1026,11 +954,6 @@ export default function AdminProjectsPage() {
           outline: none;
         }
 
-        /*
-         * Field that the user has typed into.
-         *
-         * This remains white after losing focus.
-         */
         .project-admin-form
           .field-filled {
           background: #ffffff !important;
@@ -1050,9 +973,6 @@ export default function AdminProjectsPage() {
           color: #777777 !important;
         }
 
-        /*
-         * File upload input.
-         */
         .project-admin-form
           input[type="file"] {
           background: var(--surface) !important;
@@ -1066,9 +986,6 @@ export default function AdminProjectsPage() {
           color: #111111 !important;
         }
 
-        /*
-         * Browser autofill.
-         */
         .project-admin-form
           input:-webkit-autofill,
         .project-admin-form
@@ -1082,10 +999,6 @@ export default function AdminProjectsPage() {
             0 0 0 1000px #ffffff inset !important;
           caret-color: #111111;
         }
-
-        /* =========================================
-           BUTTONS
-           ========================================= */
 
         .admin-page button,
         .admin-page a.message-action-button {
@@ -1131,13 +1044,12 @@ export default function AdminProjectsPage() {
           border-color: #ffffff !important;
         }
 
-        /* =========================================
-           EXISTING PROJECT IMAGES
-           ========================================= */
-
         .project-existing-images {
           display: grid;
-          grid-template-columns: repeat(2, minmax(0, 1fr));
+          grid-template-columns: repeat(
+            2,
+            minmax(0, 1fr)
+          );
           gap: 14px;
           margin-top: 14px;
         }
@@ -1201,10 +1113,6 @@ export default function AdminProjectsPage() {
           }
         }
 
-        /* =========================================
-           IMAGE UPLOAD LIST
-           ========================================= */
-
         .project-upload-list {
           display: flex;
           flex-direction: column;
@@ -1259,13 +1167,7 @@ export default function AdminProjectsPage() {
 
       <main className="admin-page">
         <div className="admin-container">
-
-          {/* =====================================
-              HEADER
-              ===================================== */}
-
           <header className="admin-header admin-subpage-header">
-
             <div>
               <Link
                 href="/admin"
@@ -1282,8 +1184,8 @@ export default function AdminProjectsPage() {
               <h1>Projects.</h1>
 
               <p className="admin-header-description">
-                Manage the projects displayed on your
-                portfolio.
+                Manage the projects displayed on
+                your portfolio.
               </p>
             </div>
 
@@ -1291,7 +1193,9 @@ export default function AdminProjectsPage() {
               type="button"
               className="admin-view-site"
               onClick={() =>
-                setShowForm((current) => !current)
+                setShowForm(
+                  (current) => !current
+                )
               }
             >
               <Plus size={15} />
@@ -1300,12 +1204,7 @@ export default function AdminProjectsPage() {
                 ? "Close form"
                 : "Add project"}
             </button>
-
           </header>
-
-          {/* =====================================
-              ERROR
-              ===================================== */}
 
           {error && (
             <div className="admin-error">
@@ -1313,25 +1212,22 @@ export default function AdminProjectsPage() {
             </div>
           )}
 
-          {/* =====================================
-              ADD PROJECT FORM
-              ===================================== */}
-
           {showForm && (
             <section className="project-form-panel">
-
               <div className="admin-panel-header">
-
                 <div>
                   <p className="eyebrow">
-                    {editingProjectId ? "EDIT PROJECT" : "NEW PROJECT"}
+                    {editingProjectId
+                      ? "EDIT PROJECT"
+                      : "NEW PROJECT"}
                   </p>
 
                   <h2>
-                    {editingProjectId ? "Edit project" : "Add a project"}
+                    {editingProjectId
+                      ? "Edit project"
+                      : "Add a project"}
                   </h2>
                 </div>
-
               </div>
 
               <form
@@ -1343,13 +1239,8 @@ export default function AdminProjectsPage() {
                 }
                 noValidate
               >
-
                 <div className="project-form-grid">
-
-                  {/* PROJECT TITLE */}
-
                   <div className="form-field">
-
                     <label htmlFor="project-title">
                       Project title
                     </label>
@@ -1371,13 +1262,9 @@ export default function AdminProjectsPage() {
                       placeholder="FinSight AI"
                       required
                     />
-
                   </div>
 
-                  {/* SLUG */}
-
                   <div className="form-field">
-
                     <label htmlFor="project-slug">
                       Slug
                     </label>
@@ -1399,13 +1286,9 @@ export default function AdminProjectsPage() {
                       placeholder="finsight-ai"
                       required
                     />
-
                   </div>
 
-                  {/* CATEGORY */}
-
                   <div className="form-field">
-
                     <label htmlFor="project-category">
                       Category
                     </label>
@@ -1413,7 +1296,9 @@ export default function AdminProjectsPage() {
                     <input
                       id="project-category"
                       className={
-                        isFieldFilled("category")
+                        isFieldFilled(
+                          "category"
+                        )
                           ? "field-filled"
                           : ""
                       }
@@ -1427,13 +1312,9 @@ export default function AdminProjectsPage() {
                       placeholder="AI / Financial Research"
                       required
                     />
-
                   </div>
 
-                  {/* YEAR */}
-
                   <div className="form-field">
-
                     <label htmlFor="project-year">
                       Year
                     </label>
@@ -1455,13 +1336,9 @@ export default function AdminProjectsPage() {
                       placeholder="2026"
                       required
                     />
-
                   </div>
 
-                  {/* SHORT DESCRIPTION */}
-
                   <div className="form-field project-form-full">
-
                     <label htmlFor="project-short">
                       Short description
                     </label>
@@ -1487,13 +1364,9 @@ export default function AdminProjectsPage() {
                       placeholder="Short description shown on project cards"
                       required
                     />
-
                   </div>
 
-                  {/* DESCRIPTION */}
-
                   <div className="form-field project-form-full">
-
                     <label htmlFor="project-description">
                       Description
                     </label>
@@ -1518,13 +1391,9 @@ export default function AdminProjectsPage() {
                       placeholder="Detailed project description"
                       required
                     />
-
                   </div>
 
-                  {/* GITHUB */}
-
                   <div className="form-field">
-
                     <label htmlFor="project-github">
                       GitHub URL
                     </label>
@@ -1547,13 +1416,9 @@ export default function AdminProjectsPage() {
                       placeholder="https://github.com/..."
                       required
                     />
-
                   </div>
 
-                  {/* LIVE */}
-
                   <div className="form-field">
-
                     <label htmlFor="project-live">
                       Live URL
                     </label>
@@ -1575,13 +1440,9 @@ export default function AdminProjectsPage() {
                       }
                       placeholder="https://..."
                     />
-
                   </div>
 
-                  {/* TECHNOLOGIES */}
-
                   <div className="form-field project-form-full">
-
                     <label htmlFor="project-technologies">
                       Technologies
                     </label>
@@ -1607,16 +1468,12 @@ export default function AdminProjectsPage() {
                     />
 
                     <small>
-                      Separate each technology with a
-                      comma.
+                      Separate each technology
+                      with a comma.
                     </small>
-
                   </div>
 
-                  {/* FEATURES */}
-
                   <div className="form-field project-form-full">
-
                     <label htmlFor="project-features">
                       Features
                     </label>
@@ -1624,7 +1481,9 @@ export default function AdminProjectsPage() {
                     <textarea
                       id="project-features"
                       className={
-                        isFieldFilled("features")
+                        isFieldFilled(
+                          "features"
+                        )
                           ? "field-filled"
                           : ""
                       }
@@ -1641,16 +1500,12 @@ export default function AdminProjectsPage() {
                     />
 
                     <small>
-                      Separate each feature with a
-                      comma.
+                      Separate each feature
+                      with a comma.
                     </small>
-
                   </div>
 
-                  {/* PROBLEM TITLE */}
-
                   <div className="form-field">
-
                     <label htmlFor="problem-title">
                       Problem title
                     </label>
@@ -1664,7 +1519,9 @@ export default function AdminProjectsPage() {
                           ? "field-filled"
                           : ""
                       }
-                      value={form.problem_title}
+                      value={
+                        form.problem_title
+                      }
                       onChange={(e) =>
                         updateTextField(
                           "problem_title",
@@ -1674,13 +1531,9 @@ export default function AdminProjectsPage() {
                       placeholder="What problem does it solve?"
                       required
                     />
-
                   </div>
 
-                  {/* SOLUTION TITLE */}
-
                   <div className="form-field">
-
                     <label htmlFor="solution-title">
                       Solution title
                     </label>
@@ -1706,13 +1559,9 @@ export default function AdminProjectsPage() {
                       placeholder="How does it solve it?"
                       required
                     />
-
                   </div>
 
-                  {/* PROBLEM DESCRIPTION */}
-
                   <div className="form-field project-form-full">
-
                     <label htmlFor="problem-description">
                       Problem description
                     </label>
@@ -1739,13 +1588,9 @@ export default function AdminProjectsPage() {
                       placeholder="Describe the problem..."
                       required
                     />
-
                   </div>
 
-                  {/* SOLUTION DESCRIPTION */}
-
                   <div className="form-field project-form-full">
-
                     <label htmlFor="solution-description">
                       Solution description
                     </label>
@@ -1772,53 +1617,65 @@ export default function AdminProjectsPage() {
                       placeholder="Describe your solution..."
                       required
                     />
-
                   </div>
 
-                  {/* PROJECT IMAGES */}
-
                   <div className="form-field project-form-full">
-
                     <label htmlFor="project-images">
                       Project screenshots
                     </label>
 
-                    {existingImages.length > 0 ? (
+                    {existingImages.length >
+                    0 ? (
                       <div className="project-existing-images">
-                        {existingImages.map((image) => (
-                          <div
-                            key={image.id}
-                            className="project-existing-image"
-                          >
-                            <img
-                              src={
-                                image.public_url ||
-                                supabase.storage
-                                  .from("project-images")
-                                  .getPublicUrl(image.storage_path)
-                                  .data.publicUrl
-                              }
-                              alt={image.alt}
-                            />
+                        {existingImages.map(
+                          (image) => (
+                            <div
+                              key={image.id}
+                              className="project-existing-image"
+                            >
+                              <img
+                                src={
+                                  image.public_url ||
+                                  supabase.storage
+                                    .from(
+                                      "project-images"
+                                    )
+                                    .getPublicUrl(
+                                      image.storage_path
+                                    ).data
+                                    .publicUrl
+                                }
+                                alt={image.alt}
+                              />
 
-                            <div className="project-existing-image-info">
-                              <small>{image.alt}</small>
+                              <div className="project-existing-image-info">
+                                <small>
+                                  {image.alt}
+                                </small>
 
-                              <button
-                                type="button"
-                                className="project-existing-image-delete"
-                                onClick={() => deleteExistingImage(image)}
-                                aria-label={`Delete ${image.alt}`}
-                              >
-                                <Trash2 size={14} />
-                              </button>
+                                <button
+                                  type="button"
+                                  className="project-existing-image-delete"
+                                  onClick={() =>
+                                    deleteExistingImage(
+                                      image
+                                    )
+                                  }
+                                  aria-label={`Delete ${image.alt}`}
+                                >
+                                  <Trash2
+                                    size={14}
+                                  />
+                                </button>
+                              </div>
                             </div>
-                          </div>
-                        ))}
+                          )
+                        )}
                       </div>
                     ) : editingProjectId ? (
                       <div className="project-existing-images-empty">
-                        No existing screenshots found for this project.
+                        No existing screenshots
+                        found for this project.
                       </div>
                     ) : null}
 
@@ -1833,23 +1690,24 @@ export default function AdminProjectsPage() {
                     />
 
                     <small>
-                      Upload one or more screenshots.
-                      Maximum 10 MB per image.
+                      Upload one or more
+                      screenshots. Maximum 10 MB
+                      per image.
                     </small>
 
                     {selectedImages.length >
                       0 && (
                       <div className="project-upload-list">
-
                         {selectedImages.map(
-                          (file, index) => (
+                          (
+                            file,
+                            index
+                          ) => (
                             <div
                               key={`${file.name}-${index}`}
                               className="project-upload-item"
                             >
-
                               <div>
-
                                 <strong>
                                   {file.name}
                                 </strong>
@@ -1857,11 +1715,13 @@ export default function AdminProjectsPage() {
                                 <small>
                                   {(
                                     file.size /
-                                    (1024 * 1024)
-                                  ).toFixed(2)}{" "}
+                                    (1024 *
+                                      1024)
+                                  ).toFixed(
+                                    2
+                                  )}{" "}
                                   MB
                                 </small>
-
                               </div>
 
                               <button
@@ -1874,22 +1734,18 @@ export default function AdminProjectsPage() {
                                 }
                                 aria-label={`Remove ${file.name}`}
                               >
-                                <X size={15} />
+                                <X
+                                  size={15}
+                                />
                               </button>
-
                             </div>
                           )
                         )}
-
                       </div>
                     )}
-
                   </div>
 
-                  {/* DISPLAY ORDER */}
-
                   <div className="form-field">
-
                     <label htmlFor="project-order">
                       Display order
                     </label>
@@ -1912,13 +1768,9 @@ export default function AdminProjectsPage() {
                         )
                       }
                     />
-
                   </div>
 
-                  {/* PUBLISH */}
-
                   <label className="project-published">
-
                     <input
                       type="checkbox"
                       checked={form.published}
@@ -1933,15 +1785,10 @@ export default function AdminProjectsPage() {
                     <span>
                       Publish this project
                     </span>
-
                   </label>
-
                 </div>
 
-                {/* FORM ACTIONS */}
-
                 <div className="project-form-actions">
-
                   <button
                     type="submit"
                     className="message-action-button"
@@ -1952,10 +1799,10 @@ export default function AdminProjectsPage() {
                         <Upload size={15} />
                         Uploading...
                       </>
+                    ) : editingProjectId ? (
+                      "Update project"
                     ) : (
-                      editingProjectId
-                        ? "Update project"
-                        : "Save project"
+                      "Save project"
                     )}
                   </button>
 
@@ -1966,24 +1813,14 @@ export default function AdminProjectsPage() {
                   >
                     Cancel
                   </button>
-
                 </div>
-
               </form>
-
             </section>
           )}
 
-          {/* =====================================
-              PROJECT LIST
-              ===================================== */}
-
           <section className="admin-project-list-panel">
-
             <div className="admin-panel-header">
-
               <div>
-
                 <p className="eyebrow">
                   PORTFOLIO
                 </p>
@@ -1994,9 +1831,7 @@ export default function AdminProjectsPage() {
                     ? "project"
                     : "projects"}
                 </h2>
-
               </div>
-
             </div>
 
             {isLoading ? (
@@ -2005,27 +1840,22 @@ export default function AdminProjectsPage() {
               </div>
             ) : projects.length === 0 ? (
               <div className="admin-empty-state">
-
                 <FolderKanban size={24} />
 
                 <p>
-                  No projects in the database yet.
+                  No projects in the
+                  database yet.
                 </p>
-
               </div>
             ) : (
               <div className="admin-project-list">
-
                 {projects.map((project) => (
                   <article
                     key={project.id}
                     className="admin-project-item"
                   >
-
                     <div className="admin-project-info">
-
                       <div className="admin-project-title-row">
-
                         <h3>
                           {project.title}
                         </h3>
@@ -2041,7 +1871,6 @@ export default function AdminProjectsPage() {
                             ? "Published"
                             : "Draft"}
                         </span>
-
                       </div>
 
                       <p>
@@ -2051,7 +1880,6 @@ export default function AdminProjectsPage() {
                       </p>
 
                       <div className="admin-project-meta">
-
                         <span>
                           {project.category}
                         </span>
@@ -2065,13 +1893,10 @@ export default function AdminProjectsPage() {
                             .slice(0, 3)
                             .join(" · ")}
                         </span>
-
                       </div>
-
                     </div>
 
                     <div className="admin-project-actions">
-
                       <button
                         type="button"
                         className="message-action-button"
@@ -2124,23 +1949,14 @@ export default function AdminProjectsPage() {
                         <Trash2 size={14} />
                         Delete
                       </button>
-
                     </div>
-
                   </article>
                 ))}
-
               </div>
             )}
-
           </section>
 
-          {/* =====================================
-              FOOTER
-              ===================================== */}
-
           <footer className="admin-footer">
-
             <span>
               AMAN. ADMIN
             </span>
@@ -2148,9 +1964,7 @@ export default function AdminProjectsPage() {
             <Link href="/admin">
               Back to dashboard
             </Link>
-
           </footer>
-
         </div>
       </main>
     </>

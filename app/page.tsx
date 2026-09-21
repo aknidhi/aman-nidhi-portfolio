@@ -29,11 +29,6 @@ type PortfolioSettings = {
   role: string | null;
   location: string | null;
 
-  /*
-   * Profile Card fields
-   * These are completely independent from
-   * the main profile name/role fields.
-   */
   profile_card_name: string | null;
   profile_card_role: string | null;
   profile_card_subtitle: string | null;
@@ -53,15 +48,18 @@ type PortfolioSettings = {
   updated_at: string | null;
 };
 
+
 export default async function Home() {
-  /*
-   * Load projects and portfolio settings
-   * from Supabase at the same time.
-   */
+
+  /* =========================================================
+     LOAD PROJECTS + SETTINGS
+  ========================================================= */
+
   const [
     { data: projectData },
     { data: settingsData },
   ] = await Promise.all([
+
     supabaseServer
       .from("projects")
       .select(
@@ -80,35 +78,42 @@ export default async function Home() {
       .select("*")
       .limit(1)
       .maybeSingle(),
+
   ]);
 
-  const projects: Project[] = projectData || [];
 
-  /*
-   * Create safe defaults so the homepage
-   * still works if the settings row is empty.
-   */
+  const projects: Project[] =
+    projectData || [];
+
+
+  /* =========================================================
+     SAFE SETTINGS
+  ========================================================= */
+
   const settings: PortfolioSettings = {
-    id: settingsData?.id || "",
+
+    id:
+      settingsData?.id || "",
 
     profile_image_path:
       settingsData?.profile_image_path || null,
 
     profile_image_alt:
-      settingsData?.profile_image_alt || "Aman Nidhi",
+      settingsData?.profile_image_alt ||
+      "Aman Nidhi",
 
     name:
-      settingsData?.name || "Aman Nidhi",
+      settingsData?.name ||
+      "Aman Nidhi",
 
     role:
-      settingsData?.role || "AI/ML Developer",
+      settingsData?.role ||
+      "AI/ML Developer",
 
     location:
-      settingsData?.location || "Haryana, India",
+      settingsData?.location ||
+      "Haryana, India",
 
-    /*
-     * Independent Profile Card CMS fields
-     */
     profile_card_name:
       settingsData?.profile_card_name ||
       "AMAN NIDHI",
@@ -154,56 +159,74 @@ export default async function Home() {
       "resume/Aman_Kumar_Nidhi_Resume.pdf",
 
     updated_at:
-      settingsData?.updated_at || null,
+      settingsData?.updated_at ||
+      null,
   };
 
-  /*
-   * Resolve profile image URL from Supabase Storage.
-   */
-  const profileImagePath =
-    settings.profile_image_path;
 
-  let profileImageUrl: string | null = null;
+  /* =========================================================
+     PROFILE IMAGE
+  ========================================================= */
 
-  if (profileImagePath) {
-    const { data: publicData } =
+  let profileImageUrl: string | null =
+    null;
+
+  if (settings.profile_image_path) {
+
+    const {
+      data: publicData,
+    } =
       supabaseServer.storage
         .from("project-images")
-        .getPublicUrl(profileImagePath);
+        .getPublicUrl(
+          settings.profile_image_path
+        );
 
     profileImageUrl =
       publicData.publicUrl;
   }
 
+
   return (
     <main className="min-h-screen overflow-hidden bg-[#090909] text-white">
+
       <Navbar />
 
-      {/* =========================================================
-          HERO SECTION
-      ========================================================= */}
+
+      {/* =====================================================
+          HERO
+      ===================================================== */}
 
       <section className="relative flex min-h-screen items-center overflow-hidden">
-        {/* Background grid */}
+
         <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(to_right,#ffffff05_1px,transparent_1px),linear-gradient(to_bottom,#ffffff05_1px,transparent_1px)] bg-[size:80px_80px]" />
 
-        {/* Ambient glow */}
         <div className="pointer-events-none absolute left-[55%] top-[35%] h-[500px] w-[500px] -translate-x-1/2 rounded-full bg-violet-500/10 blur-[140px]" />
 
+
         <div className="container relative z-10 pt-24">
-          <div className="grid items-center gap-10 lg:grid-cols-[1fr_300px] lg:gap-16">
 
-            {/* =================================================
-                PROFILE CARD
+          <div className="grid items-center gap-16 lg:grid-cols-[1fr_300px]">
 
-                Mobile:
-                Appears ABOVE the hero content.
+            <HeroContent
+              settings={{
+                name: settings.name,
+                role: settings.role,
+                hero_badge: settings.hero_badge,
+                hero_title: settings.hero_title,
+                hero_description:
+                  settings.hero_description,
+                email: settings.email,
+                github_url:
+                  settings.github_url,
+                linkedin_url:
+                  settings.linkedin_url,
+              }}
+            />
 
-                Desktop:
-                Moves to the RIGHT side.
-            ================================================= */}
 
-            <div className="order-1 flex justify-center lg:order-2">
+            <div className="hidden lg:block">
+
               <ProfileCard
                 imageUrl={profileImageUrl}
                 imageAlt={
@@ -223,51 +246,28 @@ export default async function Home() {
                   "Data Analytics"
                 }
               />
-            </div>
 
-            {/* =================================================
-                HERO CONTENT
-
-                Mobile:
-                Appears BELOW the profile photo.
-
-                Desktop:
-                Moves to the LEFT side.
-            ================================================= */}
-
-            <div className="order-2 lg:order-1">
-              <HeroContent
-                settings={{
-                  name: settings.name,
-                  role: settings.role,
-                  hero_badge:
-                    settings.hero_badge,
-                  hero_title:
-                    settings.hero_title,
-                  hero_description:
-                    settings.hero_description,
-                  email: settings.email,
-                  github_url:
-                    settings.github_url,
-                  linkedin_url:
-                    settings.linkedin_url,
-                }}
-              />
             </div>
 
           </div>
 
-          {/* Scroll Indicator */}
+
           <div className="absolute bottom-10 left-0 hidden items-center gap-3 text-xs uppercase tracking-[0.2em] text-white/25 md:flex">
+
             Scroll to explore
+
             <ArrowDown size={14} />
+
           </div>
+
         </div>
+
       </section>
 
-      {/* =========================================================
-          ABOUT INTRO
-      ========================================================= */}
+
+      {/* =====================================================
+          ABOUT
+      ===================================================== */}
 
       <AboutIntro
         aboutText={
@@ -275,55 +275,77 @@ export default async function Home() {
         }
       />
 
-      {/* =========================================================
+
+      {/* =====================================================
           SELECTED WORK
-      ========================================================= */}
+      ===================================================== */}
 
       <section className="border-t border-white/10 py-28">
+
         <div className="container">
 
-          {/* Heading */}
-          <div className="mb-14 flex items-end justify-between">
-            <div>
-              <p className="mb-4 text-xs uppercase tracking-[0.2em] text-white/30">
+          <div className="grid gap-12 md:grid-cols-[180px_1fr]">
+
+            {/* SECTION LABEL */}
+
+            <div className="pt-2">
+
+              <p className="text-xs uppercase tracking-[0.2em] text-white/30">
                 Selected work
               </p>
 
-              <h2 className="text-4xl tracking-[-0.045em] md:text-6xl">
-                Things I&apos;ve built.
-              </h2>
             </div>
 
-            <Link
-              href="/projects"
-              className="group hidden items-center gap-2 text-sm text-white/40 transition-colors hover:text-white sm:flex"
-            >
-              View all
 
-              <ArrowUpRight
-                size={15}
-                className="transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5"
+            {/* CONTENT */}
+
+            <div>
+
+              <div className="mb-14 flex items-end justify-between">
+
+                <h2 className="text-4xl tracking-[-0.045em] md:text-6xl">
+                  Things I&apos;ve built.
+                </h2>
+
+
+                <Link
+                  href="/projects"
+                  className="group hidden items-center gap-2 text-sm text-white/40 transition-colors hover:text-white sm:flex"
+                >
+                  View all
+
+                  <ArrowUpRight
+                    size={15}
+                    className="transition-transform duration-300 group-hover:-translate-y-0.5 group-hover:translate-x-0.5"
+                  />
+                </Link>
+
+              </div>
+
+
+              <ProjectGrid
+                projects={projects}
               />
-            </Link>
+
+            </div>
+
           </div>
 
-          {/* Project Grid */}
-          <ProjectGrid
-            projects={projects}
-          />
-
         </div>
+
       </section>
 
-      {/* =========================================================
+
+      {/* =====================================================
           CAPABILITIES
-      ========================================================= */}
+      ===================================================== */}
 
       <Capabilities />
 
-      {/* =========================================================
+
+      {/* =====================================================
           CONTACT CTA
-      ========================================================= */}
+      ===================================================== */}
 
       <ContactCTA
         email={
@@ -332,11 +354,13 @@ export default async function Home() {
         }
       />
 
-      {/* =========================================================
+
+      {/* =====================================================
           FOOTER
-      ========================================================= */}
+      ===================================================== */}
 
       <footer className="border-t border-white/10 py-8">
+
         <div className="container flex flex-col justify-between gap-4 text-sm text-white/30 sm:flex-row">
 
           <p>
@@ -344,6 +368,7 @@ export default async function Home() {
             {settings.name ||
               "Aman Nidhi"}
           </p>
+
 
           <div className="flex gap-6">
 
@@ -359,6 +384,7 @@ export default async function Home() {
               GitHub
             </a>
 
+
             <a
               href={
                 settings.linkedin_url ||
@@ -371,6 +397,7 @@ export default async function Home() {
               LinkedIn
             </a>
 
+
             <a
               href={`mailto:${
                 settings.email ||
@@ -382,8 +409,11 @@ export default async function Home() {
             </a>
 
           </div>
+
         </div>
+
       </footer>
+
     </main>
   );
 }

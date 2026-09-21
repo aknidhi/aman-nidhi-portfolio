@@ -1,13 +1,10 @@
 import { createServerClient } from "@supabase/ssr";
-import {
-  NextResponse,
-  type NextRequest,
-} from "next/server";
+import { NextResponse, type NextRequest } from "next/server";
 
 export async function updateSession(
   request: NextRequest
 ) {
-  let supabaseResponse = NextResponse.next({
+  let response = NextResponse.next({
     request,
   });
 
@@ -21,9 +18,6 @@ export async function updateSession(
         },
 
         setAll(cookiesToSet) {
-          /*
-           * Update request cookies first.
-           */
           cookiesToSet.forEach(
             ({ name, value }) => {
               request.cookies.set(
@@ -33,26 +27,13 @@ export async function updateSession(
             }
           );
 
-          /*
-           * Recreate the response using the
-           * updated request cookies.
-           */
-          supabaseResponse =
-            NextResponse.next({
-              request,
-            });
+          response = NextResponse.next({
+            request,
+          });
 
-          /*
-           * Copy Supabase auth cookies onto
-           * the response.
-           */
           cookiesToSet.forEach(
-            ({
-              name,
-              value,
-              options,
-            }) => {
-              supabaseResponse.cookies.set(
+            ({ name, value, options }) => {
+              response.cookies.set(
                 name,
                 value,
                 options
@@ -67,107 +48,67 @@ export async function updateSession(
   const pathname =
     request.nextUrl.pathname;
 
-
   /*
-   * The login page must remain publicly
-   * accessible.
+   * Login page must always be accessible.
    */
   if (pathname === "/admin/login") {
-    return supabaseResponse;
+    return response;
   }
 
-
   /*
-   * Only protect /admin routes.
+   * Public pages do not need auth checks.
    */
   if (!pathname.startsWith("/admin")) {
-    return supabaseResponse;
+    return response;
   }
 
-
   /*
-   * Check the authenticated user's claims.
-   *
-   * getClaims() is used instead of getSession()
-   * for server-side authorization.
+   * Ask Supabase for the authenticated user's
+   * verified claims.
    */
   const {
-    data,
-    error,
+    data: claimsData,
+    error: claimsError,
   } = await supabase.auth.getClaims();
 
-  const claims = data?.claims;
-
-
   /*
-   * No valid authentication.
+   * If claims are valid, allow the request.
    */
-  if (error || !claims) {
-    const loginUrl =
-      request.nextUrl.clone();
-
-    loginUrl.pathname =
-      "/admin/login";
-
-    loginUrl.searchParams.set(
-      "redirect",
-      pathname
-    );
-
-    /*
-     * Create the redirect response.
-     */
-    const redirectResponse =
-      NextResponse.redirect(
-        loginUrl
-      );
-
-    /*
-     * IMPORTANT:
-     *
-     * Supabase may have refreshed or changed
-     * authentication cookies while getClaims()
-     * was running.
-     *
-     * Those cookies must also be copied to
-     * the redirect response.
-     */
-    supabaseResponse.cookies
-      .getAll()
-      .forEach((cookie) => {
-        redirectResponse.cookies.set(
-          cookie
-        );
-      });
-
-
-    /*
-     * Preserve cache-related headers.
-     */
-    for (const header of [
-      "cache-control",
-      "expires",
-      "pragma",
-    ]) {
-      const value =
-        supabaseResponse.headers.get(
-          header
-        );
-
-      if (value) {
-        redirectResponse.headers.set(
-          header,
-          value
-        );
-      }
-    }
-
-    return redirectResponse;
+  if (!claimsError && claimsData?.claims) {
+    return response;
   }
 
+  /*
+   * No valid admin session.
+   * Redirect to login.
+   */
+  const loginUrl =
+    request.nextUrl.clone();
+
+  loginUrl.pathname =
+    "/admin/login";
+
+  loginUrl.searchParams.set(
+    "redirect",
+    pathname
+  );
+
+  const redirectResponse =
+    NextResponse.redirect(loginUrl);
 
   /*
-   * User is authenticated.
+   * Preserve any cookies that Supabase
+   * refreshed while checking the session.
    */
-  return supabaseResponse;
+  response.cookies
+    .getAll()
+    .forEach((cookie) => {
+      redirectResponse.cookies.set(
+        cookie.name,
+        cookie.value,
+        cookie
+      );
+    });
+
+  return redirectResponse;
 }
