@@ -8,6 +8,8 @@ import {
 import Navbar from "@/components/layout/Navbar";
 import { supabaseServer } from "@/lib/supabase-server";
 
+export const dynamic = "force-dynamic";
+
 type Project = {
   slug: string;
   title: string;
@@ -43,9 +45,9 @@ export default async function ProjectDetailPage({
 }) {
   const { slug } = await params;
 
-  // --------------------------------------------------
-  // LOAD PROJECT
-  // --------------------------------------------------
+  /* =========================================================
+     LOAD PROJECT
+  ========================================================= */
 
   const { data, error } = await supabaseServer
     .from("projects")
@@ -56,42 +58,44 @@ export default async function ProjectDetailPage({
 
   if (error || !data) {
     return (
-      <>
+      <main className="public-red-page min-h-screen overflow-x-hidden text-white">
         <Navbar />
 
-        <main className="project-detail-page">
-          <div className="project-container">
-            <Link
-              href="/projects"
-              className="back-link"
-            >
-              <ArrowLeft size={15} />
-              Back to projects
-            </Link>
+        <div className="container relative z-10 pt-40">
+          <Link
+            href="/projects"
+            className="group inline-flex items-center gap-2 text-xs uppercase tracking-[0.18em] text-white/40 transition-colors hover:text-white"
+          >
+            <ArrowLeft
+              size={14}
+              className="transition-transform group-hover:-translate-x-1"
+            />
 
-            <section className="project-hero">
-              <p className="eyebrow">
-                PROJECT NOT FOUND
-              </p>
+            Back to projects
+          </Link>
 
-              <h1 className="project-title">
-                Project not found.
-              </h1>
+          <section className="py-24 md:py-36">
+            <p className="text-xs uppercase tracking-[0.2em] text-white/35">
+              Project not found
+            </p>
 
-              <p className="project-lead">
-                The project may have been removed or is not
-                currently published.
-              </p>
-            </section>
-          </div>
-        </main>
-      </>
+            <h1 className="mt-5 text-5xl tracking-[-0.055em] md:text-7xl">
+              Project not found.
+            </h1>
+
+            <p className="mt-7 max-w-xl text-base leading-7 text-white/45">
+              The project may have been removed or is
+              not currently published.
+            </p>
+          </section>
+        </div>
+      </main>
     );
   }
 
-  // --------------------------------------------------
-  // LOAD PROJECT IMAGES FROM SUPABASE
-  // --------------------------------------------------
+  /* =========================================================
+     LOAD PROJECT IMAGES
+  ========================================================= */
 
   const { data: imageData } =
     await supabaseServer
@@ -118,9 +122,9 @@ export default async function ProjectDetailPage({
         }))
       : [];
 
-  // --------------------------------------------------
-  // PROJECT DATA
-  // --------------------------------------------------
+  /* =========================================================
+     PROJECT DATA
+  ========================================================= */
 
   const project: Project = {
     slug: String(data.slug),
@@ -188,9 +192,9 @@ export default async function ProjectDetailPage({
     },
   };
 
-  // --------------------------------------------------
-  // CREATE PUBLIC STORAGE URLS
-  // --------------------------------------------------
+  /* =========================================================
+     STORAGE URLS
+  ========================================================= */
 
   const databaseImages =
     projectImages.map((image) => {
@@ -210,317 +214,298 @@ export default async function ProjectDetailPage({
       };
     });
 
-  const hasDatabaseImages =
-    databaseImages.length > 0;
-
   return (
-    <>
+    <main className="public-red-page min-h-screen overflow-x-hidden text-white">
       <Navbar />
 
-      <main className="project-detail-page">
-        <div className="project-container">
+      <div className="container relative z-10 pb-24 pt-36 md:pb-32 md:pt-44">
 
-          {/* ==================================================
-              BACK
-              ================================================== */}
+        {/* =====================================================
+            BACK
+        ===================================================== */}
 
-          <Link
-            href="/projects"
-            className="back-link"
-          >
-            <ArrowLeft size={15} />
-            Back to projects
-          </Link>
+        <Link
+          href="/projects"
+          className="group inline-flex items-center gap-2 text-xs uppercase tracking-[0.18em] text-white/40 transition-colors hover:text-white"
+        >
+          <ArrowLeft
+            size={14}
+            className="transition-transform duration-300 group-hover:-translate-x-1"
+          />
 
-          {/* ==================================================
-              HERO
-              ================================================== */}
+          Back to projects
+        </Link>
 
-          <section className="project-hero">
+        {/* =====================================================
+            HERO
+        ===================================================== */}
+
+        <section className="mt-12 border-b border-white/10 pb-20 md:mt-16 md:pb-28">
+          <div className="grid gap-12 md:grid-cols-[180px_1fr]">
+
             <div>
-              <p className="eyebrow">
+              <p className="text-xs uppercase tracking-[0.2em] text-white/40">
                 {project.category}
               </p>
 
-              <h1 className="project-title">
+              <p className="mt-4 text-xs text-white/20">
+                {project.year}
+              </p>
+            </div>
+
+            <div>
+              <h1 className="max-w-6xl text-5xl font-medium leading-[0.93] tracking-[-0.06em] sm:text-7xl md:text-8xl">
                 {project.title}
               </h1>
 
-              <p className="project-lead">
+              <p className="mt-9 max-w-3xl text-lg leading-8 text-white/50 md:text-xl">
                 {project.shortDescription}
               </p>
-            </div>
 
-            <div className="project-meta">
-              <span>
-                {project.year}
-              </span>
-            </div>
-
-            <div className="project-actions">
-              {project.github && (
-                <a
-                  href={project.github}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="project-button"
-                >
-                  GitHub
-
-                  <ArrowUpRight
-                    size={15}
-                  />
-                </a>
-              )}
-
-              {project.live && (
-                <a
-                  href={project.live}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="project-button"
-                >
-                  Live project
-
-                  <ExternalLink
-                    size={15}
-                  />
-                </a>
-              )}
-            </div>
-          </section>
-
-          {/* ==================================================
-              PROJECT GALLERY
-              ================================================== */}
-
-          {hasDatabaseImages && (
-            <section className="project-gallery">
-              <div className="gallery-intro">
-                <p className="eyebrow">
-                  PROJECT PREVIEW
-                </p>
-
-                <h2>
-                  Interface & workflow.
-                </h2>
-
-                <p>
-                  Explore the project interface,
-                  workflow and key screens.
-                </p>
-              </div>
-
-              {databaseImages.map(
-                (image, index) => (
-                  <div
-                    className="gallery-section"
-                    key={image.id}
+              <div className="mt-10 flex flex-wrap gap-3">
+                {project.github && (
+                  <a
+                    href={project.github}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="public-red-button group inline-flex items-center gap-2 rounded-full px-5 py-3 text-sm font-medium transition-all duration-300 hover:-translate-y-1"
                   >
-                    <div className="gallery-text">
-                      <p className="eyebrow">
-                        SCREEN{" "}
-                        {String(
-                          index + 1
-                        ).padStart(
-                          2,
-                          "0"
-                        )}
-                      </p>
+                    GitHub
 
-                      <h3>
-                        {image.alt}
-                      </h3>
-                    </div>
-
-                    <img
-                      src={image.src}
-                      alt={image.alt}
-                      className="project-image"
-                      loading={
-                        index === 0
-                          ? "eager"
-                          : "lazy"
-                      }
+                    <ArrowUpRight
+                      size={15}
+                      className="transition-transform duration-300 group-hover:-translate-y-0.5 group-hover:translate-x-0.5"
                     />
-                  </div>
-                )
-              )}
-            </section>
-          )}
+                  </a>
+                )}
 
-          {!hasDatabaseImages && (
-            <section className="project-gallery">
-              <div className="gallery-intro">
-                <p className="eyebrow">
-                  PROJECT PREVIEW
-                </p>
+                {project.live && (
+                  <a
+                    href={project.live}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="public-red-outline group inline-flex items-center gap-2 rounded-full border px-5 py-3 text-sm transition-all duration-300 hover:-translate-y-1 hover:bg-white hover:text-black"
+                  >
+                    Live project
 
-                <h2>
-                  Project preview.
-                </h2>
-
-                <p>
-                  Project images will appear here
-                  once they are added from the
-                  project management dashboard.
-                </p>
+                    <ExternalLink
+                      size={15}
+                      className="transition-transform duration-300 group-hover:-translate-y-0.5 group-hover:translate-x-0.5"
+                    />
+                  </a>
+                )}
               </div>
+            </div>
+          </div>
+        </section>
 
-              <div className="rounded-[1.5rem] border border-white/10 bg-[#101010] p-8">
-                <p className="text-sm leading-7 text-white/35">
-                  No project images have been
-                  uploaded yet.
-                </p>
+        {/* =====================================================
+            PROJECT IMAGES
+        ===================================================== */}
 
-                <Link
-                  href="/projects"
-                  className="group mt-6 inline-flex items-center gap-2 text-sm text-white/50 transition-colors hover:text-white"
-                >
-                  Back to projects
+        <section className="border-b border-white/10 py-20 md:py-28">
+          <div className="grid gap-12 md:grid-cols-[180px_1fr]">
 
-                  <ArrowUpRight
-                    size={15}
-                    className="transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5"
-                  />
-                </Link>
-              </div>
-            </section>
-          )}
-
-          {/* ==================================================
-              OVERVIEW
-              ================================================== */}
-
-          <section className="project-section">
             <div>
-              <p className="eyebrow">
-                OVERVIEW
+              <p className="text-xs uppercase tracking-[0.2em] text-white/40">
+                Project preview
+              </p>
+
+              <p className="mt-4 text-xs text-white/20">
+                01
               </p>
             </div>
 
             <div>
-              <p className="section-description">
+              {databaseImages.length === 0 ? (
+                <div className="rounded-[2rem] border border-white/10 bg-black/20 p-8 md:p-12">
+                  <p className="text-sm leading-7 text-white/40">
+                    Project images will appear here
+                    once they are added from the
+                    project management dashboard.
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-14">
+                  {databaseImages.map(
+                    (image, index) => (
+                      <div key={image.id}>
+                        <div className="mb-5 flex items-center justify-between gap-5">
+                          <div>
+                            <p className="text-[10px] uppercase tracking-[0.18em] text-white/30">
+                              Screen{" "}
+                              {String(
+                                index + 1
+                              ).padStart(2, "0")}
+                            </p>
+
+                            <h2 className="mt-2 text-xl tracking-[-0.03em] text-white/80">
+                              {image.alt}
+                            </h2>
+                          </div>
+
+                          <span className="text-xs text-white/15">
+                            {String(
+                              index + 1
+                            ).padStart(2, "0")}
+                          </span>
+                        </div>
+
+                        <div className="public-project-image-card group overflow-hidden rounded-[1.75rem] border border-white/10 bg-black/30">
+                          <img
+                            src={image.src}
+                            alt={image.alt}
+                            loading={
+                              index === 0
+                                ? "eager"
+                                : "lazy"
+                            }
+                            className="w-full object-cover transition-transform duration-700 group-hover:scale-[1.015]"
+                          />
+                        </div>
+                      </div>
+                    )
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+        </section>
+
+        {/* =====================================================
+            OVERVIEW
+        ===================================================== */}
+
+        <section className="border-b border-white/10 py-20 md:py-28">
+          <div className="grid gap-12 md:grid-cols-[180px_1fr]">
+            <div>
+              <p className="text-xs uppercase tracking-[0.2em] text-white/40">
+                Overview
+              </p>
+            </div>
+
+            <div>
+              <p className="max-w-4xl text-2xl leading-[1.35] tracking-[-0.025em] text-white/75 md:text-4xl">
                 {project.description}
               </p>
             </div>
-          </section>
+          </div>
+        </section>
 
-          {/* ==================================================
-              PROBLEM
-              ================================================== */}
+        {/* =====================================================
+            PROBLEM
+        ===================================================== */}
 
-          <section className="project-section">
+        <section className="border-b border-white/10 py-20 md:py-28">
+          <div className="grid gap-12 md:grid-cols-[180px_1fr]">
             <div>
-              <p className="eyebrow">
-                THE PROBLEM
+              <p className="text-xs uppercase tracking-[0.2em] text-white/40">
+                The problem
               </p>
             </div>
 
             <div>
-              <h2 className="section-title">
+              <h2 className="max-w-3xl text-3xl tracking-[-0.04em] md:text-5xl">
                 {project.problem.title}
               </h2>
 
-              <p className="section-description">
+              <p className="mt-7 max-w-3xl text-base leading-8 text-white/45">
                 {project.problem.description}
               </p>
             </div>
-          </section>
+          </div>
+        </section>
 
-          {/* ==================================================
-              SOLUTION
-              ================================================== */}
+        {/* =====================================================
+            SOLUTION
+        ===================================================== */}
 
-          <section className="project-section">
+        <section className="border-b border-white/10 py-20 md:py-28">
+          <div className="grid gap-12 md:grid-cols-[180px_1fr]">
             <div>
-              <p className="eyebrow">
-                THE SOLUTION
+              <p className="text-xs uppercase tracking-[0.2em] text-white/40">
+                The solution
               </p>
             </div>
 
             <div>
-              <h2 className="section-title">
+              <h2 className="max-w-3xl text-3xl tracking-[-0.04em] md:text-5xl">
                 {project.solution.title}
               </h2>
 
-              <p className="section-description">
+              <p className="mt-7 max-w-3xl text-base leading-8 text-white/45">
                 {project.solution.description}
               </p>
             </div>
-          </section>
+          </div>
+        </section>
 
-          {/* ==================================================
-              FEATURES
-              ================================================== */}
+        {/* =====================================================
+            FEATURES
+        ===================================================== */}
 
-          <section className="project-section">
+        <section className="border-b border-white/10 py-20 md:py-28">
+          <div className="grid gap-12 md:grid-cols-[180px_1fr]">
             <div>
-              <p className="eyebrow">
-                KEY FEATURES
+              <p className="text-xs uppercase tracking-[0.2em] text-white/40">
+                Key features
               </p>
             </div>
 
-            <div className="feature-grid">
-              {project.features.length ===
-              0 ? (
-                <p className="section-description">
+            <div>
+              {project.features.length === 0 ? (
+                <p className="text-sm text-white/40">
                   Features will be added soon.
                 </p>
               ) : (
-                project.features.map(
-                  (
-                    feature: string,
-                    index: number
-                  ) => (
-                    <div
-                      className="feature-card"
-                      key={`${feature}-${index}`}
-                    >
-                      <span>
-                        {String(
-                          index + 1
-                        ).padStart(
-                          2,
-                          "0"
-                        )}
-                      </span>
+                <div className="grid gap-px overflow-hidden rounded-[1.5rem] border border-white/10 bg-white/10 sm:grid-cols-2">
+                  {project.features.map(
+                    (feature, index) => (
+                      <div
+                        key={`${feature}-${index}`}
+                        className="bg-black/30 p-7 md:p-9"
+                      >
+                        <span className="text-xs text-white/20">
+                          {String(
+                            index + 1
+                          ).padStart(2, "0")}
+                        </span>
 
-                      <h3>
-                        {feature}
-                      </h3>
-                    </div>
-                  )
-                )
+                        <h3 className="mt-8 text-xl tracking-[-0.03em] text-white/80">
+                          {feature}
+                        </h3>
+                      </div>
+                    )
+                  )}
+                </div>
               )}
             </div>
-          </section>
+          </div>
+        </section>
 
-          {/* ==================================================
-              TECHNOLOGIES
-              ================================================== */}
+        {/* =====================================================
+            TECHNOLOGIES
+        ===================================================== */}
 
-          <section className="project-section">
+        <section className="border-b border-white/10 py-20 md:py-28">
+          <div className="grid gap-12 md:grid-cols-[180px_1fr]">
             <div>
-              <p className="eyebrow">
-                TECHNOLOGIES
+              <p className="text-xs uppercase tracking-[0.2em] text-white/40">
+                Technologies
               </p>
             </div>
 
-            <div className="technology-list">
-              {project.technologies.length ===
-              0 ? (
-                <p className="section-description">
+            <div className="flex flex-wrap gap-2.5">
+              {project.technologies.length === 0 ? (
+                <p className="text-sm text-white/40">
                   Technologies will be added soon.
                 </p>
               ) : (
                 project.technologies.map(
-                  (
-                    technology: string,
-                    index: number
-                  ) => (
+                  (technology, index) => (
                     <span
                       key={`${technology}-${index}`}
+                      className="rounded-full border border-white/10 bg-white/[0.025] px-4 py-2.5 text-sm text-white/65 transition-all duration-300 hover:border-white/20 hover:bg-white/[0.06] hover:text-white"
                     >
                       {technology}
                     </span>
@@ -528,37 +513,43 @@ export default async function ProjectDetailPage({
                 )
               )}
             </div>
-          </section>
+          </div>
+        </section>
 
-          {/* ==================================================
-              BOTTOM
-              ================================================== */}
+        {/* =====================================================
+            BOTTOM CTA
+        ===================================================== */}
 
-          <section className="project-bottom">
+        <section className="py-28 md:py-36">
+          <div className="flex flex-col justify-between gap-10 md:flex-row md:items-end">
             <div>
-              <p className="eyebrow">
-                MORE PROJECTS
+              <p className="text-xs uppercase tracking-[0.2em] text-white/40">
+                More work
               </p>
 
-              <h2>
-                Explore more of my work.
+              <h2 className="mt-5 max-w-3xl text-4xl leading-[0.95] tracking-[-0.05em] md:text-6xl">
+                Explore more of
+                <br />
+                <span className="text-white/35">
+                  my work.
+                </span>
               </h2>
             </div>
 
             <Link
               href="/projects"
-              className="project-button"
+              className="public-red-button group inline-flex w-fit items-center gap-3 rounded-full px-6 py-3.5 text-sm font-medium transition-all duration-300 hover:-translate-y-1"
             >
               View all projects
 
               <ArrowUpRight
-                size={15}
+                size={16}
+                className="transition-transform duration-300 group-hover:-translate-y-0.5 group-hover:translate-x-0.5"
               />
             </Link>
-          </section>
-
-        </div>
-      </main>
-    </>
+          </div>
+        </section>
+      </div>
+    </main>
   );
 }

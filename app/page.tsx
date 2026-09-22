@@ -211,7 +211,7 @@ export default async function Home() {
   ========================================================= */
 
   return (
-    <main className="min-h-screen overflow-hidden bg-[#090909] text-white">
+    <main className="public-red-page min-h-screen overflow-hidden">
 
       <Navbar />
 
@@ -219,13 +219,24 @@ export default async function Home() {
           HERO
       ===================================================== */}
 
+      {/* Mobile profile image: directly below the navbar */}
+      <div className="container relative z-10 pt-24 md:hidden">
+        <ProfileCard
+          imageUrl={profileImageUrl}
+          imageAlt={settings.profile_image_alt || "Aman Nidhi"}
+          cardName={settings.profile_card_name || "AMAN NIDHI"}
+          cardRole={settings.profile_card_role || "AI/ML Developer"}
+          cardSubtitle={settings.profile_card_subtitle || "Data Analytics"}
+        />
+      </div>
+
       <section className="relative flex min-h-screen items-center overflow-hidden">
 
-        <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(to_right,#ffffff05_1px,transparent_1px),linear-gradient(to_bottom,#ffffff05_1px,transparent_1px)] bg-[size:80px_80px]" />
+        <div className="pointer-events-none absolute inset-0 public-grid" />
 
-        <div className="pointer-events-none absolute left-[55%] top-[35%] h-[500px] w-[500px] -translate-x-1/2 rounded-full bg-violet-500/10 blur-[140px]" />
+        <div className="public-red-glow left-[55%] top-[28%] h-[560px] w-[560px] -translate-x-1/2" />
 
-        <div className="container relative z-10 pt-24">
+        <div className="container relative z-10 pt-14 md:pt-24">
 
           <div className="grid items-center gap-16 lg:grid-cols-[1fr_300px]">
 
@@ -275,7 +286,7 @@ export default async function Home() {
 
           </div>
 
-          <div className="absolute bottom-10 left-0 hidden items-center gap-3 text-xs uppercase tracking-[0.2em] text-white/25 md:flex">
+          <div className="absolute bottom-10 left-0 hidden items-center gap-3 text-xs uppercase tracking-[0.2em] text-[#756A66] md:flex">
 
             Scroll to explore
 
@@ -301,7 +312,7 @@ export default async function Home() {
           SELECTED WORK
       ===================================================== */}
 
-      <section className="border-t border-white/10 py-28">
+      <section className="public-red-section border-t py-28">
 
         <div className="container">
 
@@ -309,7 +320,7 @@ export default async function Home() {
 
             <div className="pt-2">
 
-              <p className="text-xs uppercase tracking-[0.2em] text-white/30">
+              <p className="public-red-muted text-xs uppercase tracking-[0.2em]">
                 Selected work
               </p>
 
@@ -325,7 +336,7 @@ export default async function Home() {
 
                 <Link
                   href="/projects"
-                  className="group hidden items-center gap-2 text-sm text-white/40 transition-colors hover:text-white sm:flex"
+                  className="group hidden items-center gap-2 text-sm text-[#756A66] transition-colors hover:text-[#F5F0EB] sm:flex"
                 >
                   View all
 
@@ -372,7 +383,7 @@ export default async function Home() {
           FOOTER
       ===================================================== */}
 
-      <footer className="border-t border-white/10 py-8">
+      <footer className="public-red-section border-t py-8">
 
         <div className="container flex flex-col justify-between gap-4 text-sm text-white/30 sm:flex-row">
 
@@ -391,7 +402,7 @@ export default async function Home() {
               }
               target="_blank"
               rel="noopener noreferrer"
-              className="transition-colors hover:text-white"
+              className="transition-colors hover:text-[#F5F0EB]"
             >
               GitHub
             </a>
@@ -403,7 +414,7 @@ export default async function Home() {
               }
               target="_blank"
               rel="noopener noreferrer"
-              className="transition-colors hover:text-white"
+              className="transition-colors hover:text-[#F5F0EB]"
             >
               LinkedIn
             </a>
@@ -413,7 +424,7 @@ export default async function Home() {
                 settings.email ||
                 "aknidhi06@gmail.com"
               }`}
-              className="transition-colors hover:text-white"
+              className="transition-colors hover:text-[#F5F0EB]"
             >
               Email
             </a>

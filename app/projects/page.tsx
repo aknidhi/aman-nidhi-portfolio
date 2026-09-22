@@ -1,216 +1,268 @@
 import Link from "next/link";
-import { ArrowUpRight } from "lucide-react";
+import {
+  ArrowLeft,
+  ArrowUpRight,
+} from "lucide-react";
 
 import Navbar from "@/components/layout/Navbar";
 import { supabaseServer } from "@/lib/supabase-server";
-import ProjectList from "@/components/projects/ProjectList";
+
+export const dynamic = "force-dynamic";
 
 type Project = {
   id: string;
   slug: string;
   title: string;
-  short_description: string;
-  description: string | null;
-  category: string;
-  year: string | number | null;
-  github: string | null;
-  live: string | null;
+  short_description: string | null;
+  category: string | null;
+  year: string | null;
   technologies: string[] | null;
-  features: string[] | null;
-};
-
-type PortfolioSettings = {
-  name: string | null;
-  role: string | null;
-  email: string | null;
-  github_url: string | null;
-  linkedin_url: string | null;
 };
 
 export default async function ProjectsPage() {
-  const [
-    { data, error },
-    { data: settingsData },
-  ] = await Promise.all([
-    supabaseServer
-      .from("projects")
-      .select(
-        `
-          id,
-          slug,
-          title,
-          short_description,
-          description,
-          category,
-          year,
-          github,
-          live,
-          technologies,
-          features
-        `
-      )
-      .eq("published", true)
-      .order("sort_order", {
-        ascending: true,
-      })
-      .order("created_at", {
-        ascending: false,
-      }),
-
-    supabaseServer
-      .from("portfolio_settings")
-      .select(
-        "name, role, email, github_url, linkedin_url"
-      )
-      .limit(1)
-      .maybeSingle(),
-  ]);
+  const { data, error } = await supabaseServer
+    .from("projects")
+    .select(
+      "id, slug, title, short_description, category, year, technologies"
+    )
+    .eq("published", true)
+    .order("sort_order", {
+      ascending: true,
+    })
+    .order("created_at", {
+      ascending: false,
+    });
 
   const projects: Project[] = data || [];
 
-  const settings: PortfolioSettings = {
-    name:
-      settingsData?.name ||
-      "Aman Nidhi",
-
-    role:
-      settingsData?.role ||
-      "AI/ML Developer",
-
-    email:
-      settingsData?.email ||
-      "aknidhi06@gmail.com",
-
-    github_url:
-      settingsData?.github_url ||
-      "https://github.com/aknidhi",
-
-    linkedin_url:
-      settingsData?.linkedin_url ||
-      "https://www.linkedin.com/in/aman-kumar-nidhi-484454209",
-  };
-
   return (
-    <main className="min-h-screen overflow-x-hidden bg-[#090909] text-white">
-
-      {/* =========================================================
-          NAVBAR
-      ========================================================= */}
+    <main className="public-red-page min-h-screen overflow-x-hidden text-white">
 
       <Navbar />
 
-      {/* =========================================================
+      {/* =====================================================
           HERO
-      ========================================================= */}
+      ===================================================== */}
 
-      <section className="border-b border-white/10 py-24 sm:py-28 md:py-36">
-        <div className="container">
+      <section className="relative overflow-hidden pb-24 pt-40 md:pb-32">
+        <div className="container relative z-10">
+
+          <Link
+            href="/"
+            className="group mb-12 inline-flex items-center gap-2 text-xs uppercase tracking-[0.18em] text-white/40 transition-colors hover:text-white"
+          >
+            <ArrowLeft
+              size={14}
+              className="transition-transform duration-300 group-hover:-translate-x-1"
+            />
+
+            Back home
+          </Link>
+
           <div className="grid gap-12 md:grid-cols-[180px_1fr]">
 
-            {/* SECTION LABEL */}
-
-            <div className="pt-2">
-              <p className="text-xs uppercase tracking-[0.2em] text-white/30">
+            <div>
+              <p className="text-xs uppercase tracking-[0.2em] text-white/40">
                 Selected work
               </p>
+
+              <span className="mt-4 block text-xs text-white/20">
+                01
+              </span>
             </div>
 
-            {/* HERO CONTENT */}
-
-            <div className="max-w-5xl">
-
-              <h1 className="text-[clamp(48px,12vw,92px)] font-medium leading-[0.94] tracking-[-0.055em]">
+            <div>
+              <h1 className="max-w-5xl text-5xl font-medium leading-[0.94] tracking-[-0.055em] sm:text-7xl md:text-8xl">
                 Things I&apos;ve
                 <br />
-                built.
+                <span className="text-white/40">
+                  built.
+                </span>
               </h1>
 
-              <p className="mt-8 max-w-2xl text-[15px] leading-7 text-white/45 sm:mt-10 sm:text-lg sm:leading-8">
-                A collection of projects where I&apos;ve
-                explored AI, machine learning, data analytics
-                and software development to build practical
-                solutions.
+              <p className="mt-10 max-w-2xl text-base leading-7 text-white/50 md:text-lg md:leading-8">
+                A collection of projects across AI,
+                machine learning, data analytics and
+                intelligent applications.
               </p>
-
             </div>
 
           </div>
         </div>
       </section>
 
-      {/* =========================================================
+      {/* =====================================================
           PROJECT LIST
-      ========================================================= */}
+      ===================================================== */}
 
-      <section className="py-20 sm:py-24 md:py-28">
-        <div className="container">
-
-          {error ? (
-            <div className="rounded-[1.75rem] border border-red-400/20 bg-red-400/[0.03] p-7 sm:rounded-[2rem] sm:p-10">
-
-              <p className="text-sm text-red-300/70">
-                Unable to load projects right now.
-              </p>
-
-              <p className="mt-2 text-xs leading-6 text-white/30">
-                Please refresh the page and try again.
-              </p>
-
-            </div>
-          ) : (
-            <ProjectList projects={projects} />
-          )}
-
-        </div>
-      </section>
-
-      {/* =========================================================
-          CTA
-      ========================================================= */}
-
-      <section className="border-t border-white/10 py-24 sm:py-28">
+      <section className="border-t border-white/10 py-20 md:py-28">
         <div className="container">
 
           <div className="grid gap-12 md:grid-cols-[180px_1fr]">
 
-            {/* SECTION LABEL */}
-
-            <div className="pt-2">
-              <p className="text-xs uppercase tracking-[0.2em] text-white/30">
-                Contact
+            <div>
+              <p className="text-xs uppercase tracking-[0.2em] text-white/40">
+                Portfolio
               </p>
-            </div>
 
-            {/* CTA CONTENT */}
+              <span className="mt-4 block text-xs text-white/20">
+                {String(projects.length).padStart(
+                  2,
+                  "0"
+                )}
+              </span>
+            </div>
 
             <div>
 
-              <h2 className="max-w-4xl text-[clamp(36px,9vw,60px)] leading-[1.03] tracking-[-0.045em] text-white/80">
-                Have an idea or project?
+              {error ? (
+                <div className="public-project-card rounded-[1.5rem] p-8">
+                  <p className="text-sm text-white/50">
+                    Projects could not be loaded right now.
+                  </p>
+                </div>
+              ) : projects.length === 0 ? (
+                <div className="public-project-card rounded-[1.5rem] p-8">
+                  <p className="text-sm text-white/40">
+                    No published projects yet.
+                  </p>
+                </div>
+              ) : (
+                <div className="grid gap-5">
+                  {projects.map(
+                    (project, index) => (
+                      <Link
+                        key={project.id}
+                        href={`/projects/${project.slug}`}
+                        className="public-project-card group block rounded-[1.75rem] p-7 md:p-9"
+                      >
+                        <div className="relative z-10 grid gap-7 md:grid-cols-[70px_1fr_auto] md:items-start">
+
+                          {/* Number */}
+                          <span className="text-xs text-white/20">
+                            {String(index + 1).padStart(
+                              2,
+                              "0"
+                            )}
+                          </span>
+
+                          {/* Main */}
+                          <div>
+
+                            <div className="flex flex-wrap items-center gap-3">
+
+                              {project.category && (
+                                <span className="text-[10px] uppercase tracking-[0.18em] text-white/35">
+                                  {project.category}
+                                </span>
+                              )}
+
+                              {project.year && (
+                                <span className="text-[10px] uppercase tracking-[0.18em] text-white/20">
+                                  {project.year}
+                                </span>
+                              )}
+
+                            </div>
+
+                            <h2 className="mt-3 text-3xl tracking-[-0.04em] text-white/90 transition-colors duration-300 group-hover:text-white md:text-4xl">
+                              {project.title}
+                            </h2>
+
+                            {project.short_description && (
+                              <p className="mt-4 max-w-2xl text-sm leading-7 text-white/40">
+                                {project.short_description}
+                              </p>
+                            )}
+
+                            {project.technologies &&
+                              project.technologies.length >
+                                0 && (
+                                <div className="mt-5 flex flex-wrap gap-2">
+                                  {project.technologies
+                                    .slice(0, 5)
+                                    .map(
+                                      (
+                                        technology
+                                      ) => (
+                                        <span
+                                          key={
+                                            technology
+                                          }
+                                          className="rounded-full border border-white/10 bg-white/[0.025] px-3 py-1.5 text-[10px] uppercase tracking-[0.12em] text-white/35 transition-all duration-300 group-hover:border-white/15 group-hover:text-white/50"
+                                        >
+                                          {
+                                            technology
+                                          }
+                                        </span>
+                                      )
+                                    )}
+                                </div>
+                              )}
+
+                          </div>
+
+                          {/* Arrow */}
+                          <div className="flex items-center justify-between md:justify-end">
+                            <span className="text-[10px] uppercase tracking-[0.15em] text-white/20 md:hidden">
+                              View project
+                            </span>
+
+                            <div className="public-project-icon flex h-10 w-10 items-center justify-center rounded-full border transition-all duration-300">
+                              <ArrowUpRight
+                                size={17}
+                                className="transition-transform duration-300 group-hover:-translate-y-0.5 group-hover:translate-x-0.5"
+                              />
+                            </div>
+                          </div>
+
+                        </div>
+                      </Link>
+                    )
+                  )}
+                </div>
+              )}
+
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* =====================================================
+          CTA
+      ===================================================== */}
+
+      <section className="border-t border-white/10 py-28 md:py-36">
+        <div className="container">
+
+          <div className="grid gap-12 md:grid-cols-[180px_1fr]">
+
+            <div>
+              <p className="text-xs uppercase tracking-[0.2em] text-white/40">
+                Next
+              </p>
+            </div>
+
+            <div>
+              <h2 className="max-w-4xl text-4xl leading-[0.95] tracking-[-0.05em] md:text-6xl">
+                Have something
+                <br />
                 <span className="text-white/35">
-                  {" "}
-                  Let&apos;s build it.
+                  interesting in mind?
                 </span>
               </h2>
 
-              <p className="mt-6 max-w-xl text-sm leading-7 text-white/40">
-                I&apos;m open to interesting projects,
-                collaborations and opportunities involving
-                AI, machine learning, data and software.
-              </p>
-
               <Link
                 href="/contact"
-                className="group mt-8 inline-flex min-h-12 items-center justify-center gap-3 rounded-full border border-white/15 px-6 py-3 text-sm text-white/70 transition-all duration-300 hover:-translate-y-1 hover:border-white/30 hover:bg-white hover:text-black active:scale-[0.98]"
+                className="public-red-button group mt-10 inline-flex items-center gap-3 rounded-full px-6 py-3.5 text-sm font-medium transition-all duration-300 hover:-translate-y-1"
               >
-                Start a conversation
+                Get in touch
 
                 <ArrowUpRight
                   size={16}
                   className="transition-transform duration-300 group-hover:-translate-y-0.5 group-hover:translate-x-0.5"
                 />
               </Link>
-
             </div>
 
           </div>
@@ -218,74 +270,31 @@ export default async function ProjectsPage() {
         </div>
       </section>
 
-      {/* =========================================================
+      {/* =====================================================
           FOOTER
-      ========================================================= */}
+      ===================================================== */}
 
-      <footer className="border-t border-white/10 py-10">
-        <div className="container">
+      <footer className="border-t border-white/10 py-8">
+        <div className="container flex flex-col justify-between gap-4 text-xs text-white/30 sm:flex-row">
 
-          <div className="flex flex-col gap-8 md:flex-row md:items-center md:justify-between">
+          <p>
+            © 2026 Aman Nidhi.
+          </p>
 
-            <div>
-              <p className="text-sm text-white/70">
-                {settings.name}
-              </p>
+          <div className="flex gap-5">
+            <Link
+              href="/about"
+              className="transition-colors hover:text-white"
+            >
+              About
+            </Link>
 
-              <p className="mt-2 text-xs text-white/30">
-                {settings.role}
-              </p>
-            </div>
-
-            <div className="flex flex-wrap items-center gap-6">
-
-              <a
-                href={settings.github_url ?? undefined}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-xs text-white/30 transition-colors hover:text-white"
-              >
-                GitHub
-              </a>
-
-              <a
-                href={settings.linkedin_url ?? undefined}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-xs text-white/30 transition-colors hover:text-white"
-              >
-                LinkedIn
-              </a>
-
-              <a
-                href={`mailto:${settings.email}`}
-                className="text-xs text-white/30 transition-colors hover:text-white"
-              >
-                Email
-              </a>
-
-              <Link
-                href="/contact"
-                className="text-xs text-white/30 transition-colors hover:text-white"
-              >
-                Contact
-              </Link>
-
-            </div>
-
-          </div>
-
-          <div className="mt-10 flex flex-col gap-3 border-t border-white/10 pt-6 text-xs text-white/20 sm:flex-row sm:items-center sm:justify-between">
-
-            <p>
-              © {new Date().getFullYear()}{" "}
-              {settings.name}. All rights reserved.
-            </p>
-
-            <p>
-              Built with Next.js
-            </p>
-
+            <Link
+              href="/contact"
+              className="transition-colors hover:text-white"
+            >
+              Contact
+            </Link>
           </div>
 
         </div>

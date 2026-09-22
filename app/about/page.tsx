@@ -4,6 +4,8 @@ import { ArrowLeft, ArrowUpRight } from "lucide-react";
 import Navbar from "@/components/layout/Navbar";
 import { supabaseServer } from "@/lib/supabase-server";
 
+export const dynamic = "force-dynamic";
+
 type Project = {
   id: string;
   slug: string;
@@ -233,7 +235,7 @@ export default async function AboutPage() {
   }
 
   return (
-    <main className="min-h-screen bg-[#090909] text-white">
+    <main className="public-red-page min-h-screen">
       <Navbar />
 
       {/* =========================================================
@@ -250,13 +252,13 @@ export default async function AboutPage() {
           }}
         />
 
-        <div className="pointer-events-none absolute right-[10%] top-[25%] h-[400px] w-[400px] rounded-full bg-violet-500/[0.06] blur-[130px]" />
+        <div className="pointer-events-none absolute right-[10%] top-[25%] h-[400px] w-[400px] rounded-full bg-[#A52A2D]/[0.10] blur-[130px]" />
 
         <div className="container relative z-10">
           <div className="mb-12">
             <Link
               href="/"
-              className="group inline-flex items-center gap-2 text-xs uppercase tracking-[0.18em] text-white/30 transition-colors hover:text-white"
+              className="group inline-flex items-center gap-2 text-xs uppercase tracking-[0.18em] text-[#756A66] transition-colors hover:text-white"
             >
               <ArrowLeft
                 size={14}
@@ -269,11 +271,11 @@ export default async function AboutPage() {
 
           <div className="grid gap-12 md:grid-cols-[180px_1fr]">
             <div>
-              <p className="text-xs uppercase tracking-[0.2em] text-white/30">
+              <p className="text-xs uppercase tracking-[0.2em] text-[#756A66]">
                 About me
               </p>
 
-              <span className="mt-4 block text-xs text-white/15">
+              <span className="mt-4 block text-xs text-[#756A66]/55">
                 01
               </span>
             </div>
@@ -283,7 +285,7 @@ export default async function AboutPage() {
                 {settings.about_page_title}
               </h1>
 
-              <p className="mt-10 max-w-3xl text-lg leading-8 text-white/45">
+              <p className="mt-10 max-w-3xl text-lg leading-8 text-[#B7AAA4]/80">
                 {settings.about_page_description}
               </p>
             </div>
@@ -295,33 +297,33 @@ export default async function AboutPage() {
           INTRODUCTION
       ========================================================= */}
 
-      <section className="border-t border-white/10 py-24">
+      <section className="border-t border-[#2A1717] py-24">
         <div className="container">
           <div className="grid gap-12 md:grid-cols-[180px_1fr]">
             <div>
-              <p className="text-xs uppercase tracking-[0.2em] text-white/30">
+              <p className="text-xs uppercase tracking-[0.2em] text-[#756A66]">
                 Introduction
               </p>
 
-              <span className="mt-4 block text-xs text-white/15">
+              <span className="mt-4 block text-xs text-[#756A66]/55">
                 02
               </span>
             </div>
 
             <div className="grid gap-10 lg:grid-cols-[1fr_220px] lg:items-start">
               <div className="max-w-4xl">
-                <p className="text-2xl leading-[1.35] tracking-[-0.025em] text-white/70 md:text-4xl">
+                <p className="text-2xl leading-[1.35] tracking-[-0.025em] text-[#F5F0EB]/80 md:text-4xl">
                   {settings.about_intro}
                 </p>
 
-                <p className="mt-8 max-w-3xl text-base leading-7 text-white/35">
+                <p className="mt-8 max-w-3xl text-base leading-7 text-[#B7AAA4]/75">
                   {settings.about_description}
                 </p>
               </div>
 
               {profileImageUrl && (
                 <div className="lg:justify-self-end">
-                  <div className="overflow-hidden rounded-[1.5rem] border border-white/10 bg-[#101010]">
+                  <div className="public-profile-cinematic relative overflow-hidden rounded-[1.5rem] border border-[#A52A2D]/25 bg-[#0A0707]">
                     <img
                       src={profileImageUrl}
                       alt={
@@ -331,6 +333,9 @@ export default async function AboutPage() {
                       }
                       className="h-[260px] w-[220px] object-cover object-center"
                     />
+                    <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/55 via-transparent to-transparent" />
+                    <div className="public-profile-light" />
+                    <div className="public-profile-border rounded-[1.5rem]" />
                   </div>
                 </div>
               )}
@@ -343,23 +348,23 @@ export default async function AboutPage() {
           EDUCATION
       ========================================================= */}
 
-      <section className="border-t border-white/10 py-24">
+      <section className="border-t border-[#2A1717] py-24">
         <div className="container">
           <div className="grid gap-12 md:grid-cols-[180px_1fr]">
             <div>
-              <p className="text-xs uppercase tracking-[0.2em] text-white/30">
+              <p className="text-xs uppercase tracking-[0.2em] text-[#756A66]">
                 Education
               </p>
 
-              <span className="mt-4 block text-xs text-white/15">
+              <span className="mt-4 block text-xs text-[#756A66]/55">
                 03
               </span>
             </div>
 
             <div className="space-y-5">
               {educationList.length === 0 ? (
-                <div className="rounded-[2rem] border border-white/10 bg-[#101010] p-7 md:p-10">
-                  <p className="text-sm text-white/35">
+                <div className="rounded-[2rem] border border-[#2A1717] bg-[#0D0A0A] p-7 md:p-10">
+                  <p className="text-sm text-[#B7AAA4]/75">
                     Education information
                     will be added soon.
                   </p>
@@ -368,11 +373,11 @@ export default async function AboutPage() {
                 educationList.map((item) => (
                   <div
                     key={item.id}
-                    className="rounded-[2rem] border border-white/10 bg-[#101010] p-7 md:p-10"
+                    className="rounded-[2rem] border border-[#2A1717] bg-[#0D0A0A] p-7 md:p-10"
                   >
                     <div className="flex flex-col gap-8 md:flex-row md:items-start md:justify-between">
                       <div>
-                        <p className="text-xs uppercase tracking-[0.18em] text-white/30">
+                        <p className="text-xs uppercase tracking-[0.18em] text-[#756A66]">
                           {item.institution}
                         </p>
 
@@ -384,25 +389,25 @@ export default async function AboutPage() {
                             : ""}
                         </h2>
 
-                        <p className="mt-4 text-sm leading-6 text-white/40">
+                        <p className="mt-4 text-sm leading-6 text-[#B7AAA4]/80">
                           {item.institution}
                         </p>
 
                         {item.description && (
-                          <p className="mt-5 max-w-2xl text-sm leading-7 text-white/30">
+                          <p className="mt-5 max-w-2xl text-sm leading-7 text-[#756A66]">
                             {item.description}
                           </p>
                         )}
 
                         {item.grade && (
-                          <p className="mt-4 text-xs uppercase tracking-[0.15em] text-white/25">
+                          <p className="mt-4 text-xs uppercase tracking-[0.15em] text-[#756A66]/80">
                             {item.grade}
                           </p>
                         )}
                       </div>
 
                       <div className="text-left md:text-right">
-                        <p className="text-sm text-white/55">
+                        <p className="text-sm text-[#B7AAA4]/90">
                           {item.start_year}
                           {" — "}
                           {item.end_year ||
@@ -410,7 +415,7 @@ export default async function AboutPage() {
                         </p>
 
                         {item.status && (
-                          <p className="mt-2 text-xs uppercase tracking-[0.15em] text-white/25">
+                          <p className="mt-2 text-xs uppercase tracking-[0.15em] text-[#756A66]/80">
                             {item.status}
                           </p>
                         )}
@@ -428,23 +433,23 @@ export default async function AboutPage() {
           CERTIFICATIONS
       ========================================================= */}
 
-      <section className="border-t border-white/10 py-24">
+      <section className="border-t border-[#2A1717] py-24">
         <div className="container">
           <div className="grid gap-12 md:grid-cols-[180px_1fr]">
             <div>
-              <p className="text-xs uppercase tracking-[0.2em] text-white/30">
+              <p className="text-xs uppercase tracking-[0.2em] text-[#756A66]">
                 Certifications
               </p>
 
-              <span className="mt-4 block text-xs text-white/15">
+              <span className="mt-4 block text-xs text-[#756A66]/55">
                 04
               </span>
             </div>
 
             <div className="space-y-5">
               {certificationList.length === 0 ? (
-                <div className="rounded-[2rem] border border-white/10 bg-[#101010] p-7 md:p-10">
-                  <p className="text-sm text-white/35">
+                <div className="rounded-[2rem] border border-[#2A1717] bg-[#0D0A0A] p-7 md:p-10">
+                  <p className="text-sm text-[#B7AAA4]/75">
                     Certifications will be added soon.
                   </p>
                 </div>
@@ -452,11 +457,11 @@ export default async function AboutPage() {
                 certificationList.map((item) => (
                   <div
                     key={item.id}
-                    className="rounded-[2rem] border border-white/10 bg-[#101010] p-7 md:p-10"
+                    className="rounded-[2rem] border border-[#2A1717] bg-[#0D0A0A] p-7 md:p-10"
                   >
                     <div className="flex flex-col gap-8 md:flex-row md:items-start md:justify-between">
                       <div className="max-w-3xl">
-                        <p className="text-xs uppercase tracking-[0.18em] text-white/30">
+                        <p className="text-xs uppercase tracking-[0.18em] text-[#756A66]">
                           {item.organization ||
                             "Certification"}
                         </p>
@@ -466,13 +471,13 @@ export default async function AboutPage() {
                         </h2>
 
                         {item.description && (
-                          <p className="mt-5 text-sm leading-7 text-white/30">
+                          <p className="mt-5 text-sm leading-7 text-[#756A66]">
                             {item.description}
                           </p>
                         )}
 
                         {item.credential_id && (
-                          <p className="mt-5 text-xs uppercase tracking-[0.12em] text-white/25">
+                          <p className="mt-5 text-xs uppercase tracking-[0.12em] text-[#756A66]/80">
                             Credential ID ·{" "}
                             {item.credential_id}
                           </p>
@@ -483,7 +488,7 @@ export default async function AboutPage() {
                             href={item.credential_url}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="group mt-6 inline-flex items-center gap-2 text-sm text-white/50 transition-colors hover:text-white"
+                            className="group mt-6 inline-flex items-center gap-2 text-sm text-[#B7AAA4]/85 transition-colors hover:text-white"
                           >
                             View credential
 
@@ -497,7 +502,7 @@ export default async function AboutPage() {
 
                       {item.issue_date && (
                         <div className="text-left md:text-right">
-                          <p className="text-sm text-white/55">
+                          <p className="text-sm text-[#B7AAA4]/90">
                             {item.issue_date}
                           </p>
                         </div>
@@ -515,15 +520,15 @@ export default async function AboutPage() {
           PROJECTS
       ========================================================= */}
 
-      <section className="border-t border-white/10 py-24">
+      <section className="border-t border-[#2A1717] py-24">
         <div className="container">
           <div className="grid gap-12 md:grid-cols-[180px_1fr]">
             <div>
-              <p className="text-xs uppercase tracking-[0.2em] text-white/30">
+              <p className="text-xs uppercase tracking-[0.2em] text-[#756A66]">
                 Projects
               </p>
 
-              <span className="mt-4 block text-xs text-white/15">
+              <span className="mt-4 block text-xs text-[#756A66]/55">
                 05
               </span>
             </div>
@@ -533,15 +538,15 @@ export default async function AboutPage() {
                 Learning by building.
               </h2>
 
-              <p className="mt-7 max-w-2xl text-base leading-7 text-white/35">
+              <p className="mt-7 max-w-2xl text-base leading-7 text-[#B7AAA4]/75">
                 My projects let me explore new
                 technologies and turn ideas
                 into working systems.
               </p>
 
               {projectList.length === 0 ? (
-                <div className="mt-8 rounded-[1.5rem] border border-white/10 bg-[#101010] p-7">
-                  <p className="text-sm text-white/35">
+                <div className="mt-8 rounded-[1.5rem] border border-[#2A1717] bg-[#0D0A0A] p-7">
+                  <p className="text-sm text-[#B7AAA4]/75">
                     Projects will be added soon.
                   </p>
                 </div>
@@ -551,22 +556,22 @@ export default async function AboutPage() {
                     <Link
                       key={project.id}
                       href={`/projects/${project.slug}`}
-                      className="group block rounded-[1.5rem] border border-white/10 bg-[#101010] p-6 transition-all duration-300 hover:border-white/20 hover:bg-[#141414]"
+                      className="group block rounded-[1.5rem] border border-[#2A1717] bg-[#0D0A0A] p-6 transition-all duration-300 hover:border-white/20 hover:bg-[#120C0C]"
                     >
                       <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
                         <div>
                           {project.category && (
-                            <p className="text-xs uppercase tracking-[0.15em] text-white/25">
+                            <p className="text-xs uppercase tracking-[0.15em] text-[#756A66]/80">
                               {project.category}
                             </p>
                           )}
 
-                          <h3 className="mt-2 text-xl tracking-[-0.03em] text-white/80 transition-colors group-hover:text-white">
+                          <h3 className="mt-2 text-xl tracking-[-0.03em] text-[#F5F0EB]/90 transition-colors group-hover:text-white">
                             {project.title}
                           </h3>
 
                           {project.short_description && (
-                            <p className="mt-3 max-w-2xl text-sm leading-6 text-white/35">
+                            <p className="mt-3 max-w-2xl text-sm leading-6 text-[#B7AAA4]/75">
                               {project.short_description}
                             </p>
                           )}
@@ -574,7 +579,7 @@ export default async function AboutPage() {
 
                         <ArrowUpRight
                           size={18}
-                          className="shrink-0 text-white/25 transition-all duration-300 group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-white"
+                          className="shrink-0 text-[#756A66]/80 transition-all duration-300 group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-white"
                         />
                       </div>
                     </Link>
@@ -584,7 +589,7 @@ export default async function AboutPage() {
 
               <Link
                 href="/projects"
-                className="group mt-8 inline-flex items-center gap-2 text-sm text-white/45 transition-colors hover:text-white"
+                className="group mt-8 inline-flex items-center gap-2 text-sm text-[#B7AAA4]/80 transition-colors hover:text-white"
               >
                 Explore all projects
 
@@ -602,15 +607,15 @@ export default async function AboutPage() {
           BACKGROUND
       ========================================================= */}
 
-      <section className="border-t border-white/10 py-24">
+      <section className="border-t border-[#2A1717] py-24">
         <div className="container">
           <div className="grid gap-12 md:grid-cols-[180px_1fr]">
             <div>
-              <p className="text-xs uppercase tracking-[0.2em] text-white/30">
+              <p className="text-xs uppercase tracking-[0.2em] text-[#756A66]">
                 Background
               </p>
 
-              <span className="mt-4 block text-xs text-white/15">
+              <span className="mt-4 block text-xs text-[#756A66]/55">
                 06
               </span>
             </div>
@@ -620,11 +625,11 @@ export default async function AboutPage() {
               <div>
                 <div className="mb-5 flex items-end justify-between gap-4">
                   <div>
-                    <p className="text-xs uppercase tracking-[0.18em] text-white/30">
+                    <p className="text-xs uppercase tracking-[0.18em] text-[#756A66]">
                       Education
                     </p>
 
-                    <p className="mt-2 text-sm text-white/25">
+                    <p className="mt-2 text-sm text-[#756A66]/80">
                       Academic background
                     </p>
                   </div>
@@ -640,13 +645,13 @@ export default async function AboutPage() {
                 </div>
 
                 {educationList.length === 0 ? (
-                  <div className="rounded-2xl border border-white/10 bg-[#101010] px-5 py-6">
-                    <p className="text-sm text-white/35">
+                  <div className="rounded-2xl border border-[#2A1717] bg-[#0D0A0A] px-5 py-6">
+                    <p className="text-sm text-[#B7AAA4]/75">
                       Education information will be added soon.
                     </p>
                   </div>
                 ) : (
-                  <div className="overflow-hidden rounded-2xl border border-white/10 bg-[#101010]">
+                  <div className="overflow-hidden rounded-2xl border border-[#2A1717] bg-[#0D0A0A]">
                     <div className="divide-y divide-white/10">
                       {educationList.map((item) => (
                         <div
@@ -664,30 +669,30 @@ export default async function AboutPage() {
                                 </h2>
 
                                 {item.status && (
-                                  <span className="rounded-full border border-white/10 px-2.5 py-1 text-[10px] uppercase tracking-[0.12em] text-white/30">
+                                  <span className="rounded-full border border-[#2A1717] px-2.5 py-1 text-[10px] uppercase tracking-[0.12em] text-[#756A66]">
                                     {item.status}
                                   </span>
                                 )}
                               </div>
 
-                              <p className="mt-2 text-sm text-white/50">
+                              <p className="mt-2 text-sm text-[#B7AAA4]/85">
                                 {item.institution}
                               </p>
 
                               {item.grade && (
-                                <p className="mt-2 text-xs text-white/25">
+                                <p className="mt-2 text-xs text-[#756A66]/80">
                                   {item.grade}
                                 </p>
                               )}
 
                               {item.description && (
-                                <p className="mt-3 max-w-2xl text-sm leading-6 text-white/30">
+                                <p className="mt-3 max-w-2xl text-sm leading-6 text-[#756A66]">
                                   {item.description}
                                 </p>
                               )}
                             </div>
 
-                            <p className="text-xs text-white/30 md:pt-1 md:text-right">
+                            <p className="text-xs text-[#756A66] md:pt-1 md:text-right">
                               {item.start_year}
                               {" — "}
                               {item.end_year || "Present"}
@@ -701,9 +706,9 @@ export default async function AboutPage() {
               </div>
 
               {/* LANGUAGES + CURRENT FOCUS */}
-              <div className="grid gap-px overflow-hidden rounded-2xl border border-white/10 bg-white/10 md:grid-cols-2">
-                <div className="bg-[#101010] p-5 sm:p-6">
-                  <p className="text-xs uppercase tracking-[0.15em] text-white/25">
+              <div className="grid gap-px overflow-hidden rounded-2xl border border-[#2A1717] bg-white/10 md:grid-cols-2">
+                <div className="bg-[#0D0A0A] p-5 sm:p-6">
+                  <p className="text-xs uppercase tracking-[0.15em] text-[#756A66]/80">
                     Languages
                   </p>
 
@@ -714,12 +719,12 @@ export default async function AboutPage() {
                           key={language.id}
                           className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between sm:gap-4"
                         >
-                          <p className="text-sm text-white/70">
+                          <p className="text-sm text-[#F5F0EB]/80">
                             {language.name}
                           </p>
 
                           {language.fluency && (
-                            <p className="text-xs text-white/25">
+                            <p className="text-xs text-[#756A66]/80">
                               {language.fluency}
                             </p>
                           )}
@@ -727,15 +732,15 @@ export default async function AboutPage() {
                       ))}
                     </div>
                   ) : (
-                    <p className="mt-4 text-sm text-white/50">
+                    <p className="mt-4 text-sm text-[#B7AAA4]/85">
                       {settings.about_languages ||
                         "Not added yet"}
                     </p>
                   )}
                 </div>
 
-                <div className="bg-[#101010] p-5 sm:p-6">
-                  <p className="text-xs uppercase tracking-[0.15em] text-white/25">
+                <div className="bg-[#0D0A0A] p-5 sm:p-6">
+                  <p className="text-xs uppercase tracking-[0.15em] text-[#756A66]/80">
                     Current focus
                   </p>
 
@@ -748,7 +753,7 @@ export default async function AboutPage() {
                       .map((item) => (
                         <span
                           key={item}
-                          className="rounded-full border border-white/10 px-3 py-1.5 text-xs text-white/45"
+                          className="rounded-full border border-[#2A1717] px-3 py-1.5 text-xs text-[#B7AAA4]/80"
                         >
                           {item}
                         </span>
@@ -765,10 +770,10 @@ export default async function AboutPage() {
           RESUME
       ========================================================= */}
 
-      <section className="border-t border-white/10 py-28">
+      <section className="border-t border-[#2A1717] py-28">
         <div className="container">
-          <div className="rounded-[2rem] border border-white/10 bg-[#101010] p-8 md:p-12">
-            <p className="text-xs uppercase tracking-[0.2em] text-white/30">
+          <div className="rounded-[2rem] border border-[#2A1717] bg-[#0D0A0A] p-8 md:p-12">
+            <p className="text-xs uppercase tracking-[0.2em] text-[#756A66]">
               Resume
             </p>
 
@@ -778,7 +783,7 @@ export default async function AboutPage() {
                   Want to know more?
                 </h2>
 
-                <p className="mt-4 max-w-xl text-sm leading-6 text-white/35">
+                <p className="mt-4 max-w-xl text-sm leading-6 text-[#B7AAA4]/75">
                   View my resume for a quick
                   overview of my education,
                   technical skills and current
@@ -790,7 +795,7 @@ export default async function AboutPage() {
                 href={resumeUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="group inline-flex w-fit items-center gap-2 rounded-full border border-white/15 px-5 py-3 text-sm text-white/70 transition-all duration-300 hover:border-white/30 hover:bg-white hover:text-black"
+                className="group inline-flex w-fit items-center gap-2 rounded-full border border-white/15 px-5 py-3 text-sm text-[#F5F0EB]/80 transition-all duration-300 hover:border-white/30 hover:bg-white hover:text-black"
               >
                 View Resume
 
@@ -808,16 +813,16 @@ export default async function AboutPage() {
           CONTACT
       ========================================================= */}
 
-      <section className="border-t border-white/10 py-32">
+      <section className="border-t border-[#2A1717] py-32">
         <div className="container">
-          <p className="mb-5 text-xs uppercase tracking-[0.2em] text-white/30">
+          <p className="mb-5 text-xs uppercase tracking-[0.2em] text-[#756A66]">
             Next
           </p>
 
           <h2 className="max-w-4xl text-5xl leading-[0.95] tracking-[-0.055em] md:text-7xl">
             Let&apos;s talk about
             <br />
-            <span className="text-white/30">
+            <span className="text-[#756A66]">
               what you&apos;re building.
             </span>
           </h2>
@@ -840,8 +845,8 @@ export default async function AboutPage() {
           FOOTER
       ========================================================= */}
 
-      <footer className="border-t border-white/10 py-8">
-        <div className="container flex flex-col justify-between gap-5 text-sm text-white/30 sm:flex-row">
+      <footer className="border-t border-[#2A1717] py-8">
+        <div className="container flex flex-col justify-between gap-5 text-sm text-[#756A66] sm:flex-row">
           <div>
             <p>
               © 2026{" "}
@@ -849,7 +854,7 @@ export default async function AboutPage() {
                 "Aman Nidhi"}
             </p>
 
-            <p className="mt-1 text-xs text-white/15">
+            <p className="mt-1 text-xs text-[#756A66]/55">
               {settings.role ||
                 "AI/ML Developer"}{" "}
               · Data Analytics

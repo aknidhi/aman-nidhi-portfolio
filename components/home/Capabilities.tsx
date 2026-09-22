@@ -11,295 +11,135 @@ type CapabilitiesProps = {
   skills: Skill[];
 };
 
-function SkillItem({
-  number,
-  name,
-}: {
-  number: string;
-  name: string;
-}) {
+function SkillPill({ name }: { name: string }) {
   return (
-    <div className="grid gap-5 py-6 sm:grid-cols-[60px_1fr] sm:gap-8">
-
-      <span className="text-xs text-white/25">
-        {number}
-      </span>
-
-      <h3 className="text-xl tracking-[-0.025em] text-white/80">
+    <div className="public-skill-pill group inline-flex items-center rounded-full px-4 py-2.5 transition-all duration-300">
+      <span className="text-sm text-white/80 transition-colors group-hover:text-white">
         {name}
-      </h3>
-
+      </span>
     </div>
   );
 }
 
-function SpeakingLanguageItem({
-  number,
+function LanguagePill({
   name,
   fluency,
 }: {
-  number: string;
   name: string;
   fluency: string | null;
 }) {
   return (
-    <div className="grid gap-5 py-6 sm:grid-cols-[60px_1fr_auto] sm:items-center sm:gap-8">
-
-      <span className="text-xs text-white/25">
-        {number}
+    <div className="public-skill-pill group flex items-center gap-3 rounded-full px-4 py-2.5 transition-all duration-300">
+      <span className="text-sm text-white/80 transition-colors group-hover:text-white">
+        {name}
       </span>
 
-      <h3 className="text-xl tracking-[-0.025em] text-white/80">
-        {name}
-      </h3>
-
-      <p className="text-xs uppercase tracking-[0.14em] text-white/25 sm:text-right">
-        {fluency || "Fluency not added"}
-      </p>
-
+      {fluency && (
+        <span className="public-language-fluency border-l pl-3 text-[10px] uppercase tracking-[0.12em]">
+          {fluency}
+        </span>
+      )}
     </div>
   );
 }
 
-export default function Capabilities({
-  skills,
-}: CapabilitiesProps) {
+export default function Capabilities({ skills }: CapabilitiesProps) {
+  const technicalSkills = skills.filter(
+    (skill) => skill.category !== "Speaking Languages"
+  );
 
-  /* =========================================================
-     TECHNICAL SKILLS
-  ========================================================= */
+  const groupedTechnicalSkills = technicalSkills.reduce<
+    Record<string, Skill[]>
+  >((groups, skill) => {
+    if (!groups[skill.category]) {
+      groups[skill.category] = [];
+    }
 
-  const technicalSkills =
-    skills.filter(
-      (skill) =>
-        skill.category !==
-        "Speaking Languages"
-    );
+    groups[skill.category].push(skill);
+    return groups;
+  }, {});
 
-  const groupedTechnicalSkills =
-    technicalSkills.reduce<
-      Record<string, Skill[]>
-    >((groups, skill) => {
+  const technicalCategories = Object.entries(groupedTechnicalSkills);
 
-      if (!groups[skill.category]) {
-        groups[skill.category] = [];
-      }
-
-      groups[skill.category].push(
-        skill
-      );
-
-      return groups;
-    }, {});
-
-  /* =========================================================
-     SPEAKING LANGUAGES
-  ========================================================= */
-
-  const speakingLanguages =
-    skills
-      .filter(
-        (skill) =>
-          skill.category ===
-          "Speaking Languages"
-      )
-      .sort(
-        (a, b) =>
-          a.sort_order -
-          b.sort_order
-      );
-
-  const technicalCategories =
-    Object.entries(
-      groupedTechnicalSkills
-    );
+  const speakingLanguages = skills
+    .filter((skill) => skill.category === "Speaking Languages")
+    .sort((a, b) => a.sort_order - b.sort_order);
 
   return (
-    <section className="border-t border-white/10 py-28">
-
+    <section className="public-red-section border-t py-24">
       <div className="container">
-
         <div className="grid gap-12 md:grid-cols-[180px_1fr]">
-
-          {/* =================================================
-              SECTION LABEL
-          ================================================= */}
-
           <div className="pt-2">
-
-            <p className="text-xs uppercase tracking-[0.2em] text-white/30">
+            <p className="public-red-muted text-xs uppercase tracking-[0.2em]">
               Skills
             </p>
-
           </div>
 
-          {/* =================================================
-              CONTENT
-          ================================================= */}
+          <div>
+            {technicalCategories.length === 0 ? (
+              <div className="border-y border-white/10 py-8">
+                <p className="text-sm text-white">
+                  Skills will appear here once they are added from the admin panel.
+                </p>
+              </div>
+            ) : (
+              <div className="divide-y divide-white/10 border-y border-white/10">
+                {technicalCategories.map(([category, categorySkills], categoryIndex) => (
+                  <div key={category} className="py-6">
+                    <div className="mb-5 flex items-center justify-between gap-4">
+                      <p className="public-red-muted text-xs uppercase tracking-[0.18em]">
+                        {category}
+                      </p>
 
-          <div className="space-y-16">
+                      <span className="text-[10px] text-white/15">
+                        {String(categoryIndex + 1).padStart(2, "0")}
+                      </span>
+                    </div>
 
-            {/* =================================================
-                TECHNICAL SKILLS
-            ================================================= */}
+                    <div className="flex flex-wrap gap-2.5">
+                      {categorySkills
+                        .sort((a, b) => a.sort_order - b.sort_order)
+                        .map((skill) => (
+                          <SkillPill key={skill.id} name={skill.name} />
+                        ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
 
-            <div>
-
-              {technicalCategories.length ===
-              0 ? (
-
-                <div className="border-y border-white/10 py-8">
-
-                  <p className="text-sm text-white/30">
-                    Skills will appear here
-                    once they are added from
-                    the admin panel.
-                  </p>
-
-                </div>
-
-              ) : (
-
-                <div className="divide-y divide-white/10 border-y border-white/10">
-
-                  {technicalCategories.map(
-                    (
-                      [
-                        category,
-                        categorySkills,
-                      ]
-                    ) => (
-
-                      <div
-                        key={
-                          category
-                        }
-                        className="py-2"
-                      >
-
-                        <div className="pb-1 pt-5">
-
-                          <p className="text-xs uppercase tracking-[0.18em] text-white/25">
-                            {category}
-                          </p>
-
-                        </div>
-
-                        {categorySkills
-                          .sort(
-                            (
-                              a,
-                              b
-                            ) =>
-                              a.sort_order -
-                              b.sort_order
-                          )
-                          .map(
-                            (
-                              skill,
-                              index
-                            ) => (
-
-                              <SkillItem
-                                key={
-                                  skill.id
-                                }
-                                number={String(
-                                  index +
-                                    1
-                                ).padStart(
-                                  2,
-                                  "0"
-                                )}
-                                name={
-                                  skill.name
-                                }
-                              />
-
-                            )
-                          )}
-
-                      </div>
-
-                    )
-                  )}
-
-                </div>
-
-              )}
-
-            </div>
-
-            {/* =================================================
-                SPEAKING LANGUAGES
-            ================================================= */}
-
-            <div>
-
-              <div className="mb-5">
-
-                <p className="text-xs uppercase tracking-[0.18em] text-white/25">
+            <div className="mt-14">
+              <div className="mb-5 flex items-center justify-between">
+                <p className="public-red-muted text-xs uppercase tracking-[0.18em]">
                   Speaking Languages
                 </p>
 
+                <span className="text-[10px] text-white/15">
+                  {String(technicalCategories.length + 1).padStart(2, "0")}
+                </span>
               </div>
 
-              {speakingLanguages.length ===
-              0 ? (
-
+              {speakingLanguages.length === 0 ? (
                 <div className="border-y border-white/10 py-8">
-
-                  <p className="text-sm text-white/30">
-                    Speaking languages will
-                    appear here once they are
-                    added from the admin panel.
+                  <p className="text-sm text-white">
+                    Speaking languages will appear here once they are added from the admin panel.
                   </p>
-
                 </div>
-
               ) : (
-
-                <div className="divide-y divide-white/10 border-y border-white/10">
-
-                  {speakingLanguages.map(
-                    (
-                      language,
-                      index
-                    ) => (
-
-                      <SpeakingLanguageItem
-                        key={
-                          language.id
-                        }
-                        number={String(
-                          index + 1
-                        ).padStart(
-                          2,
-                          "0"
-                        )}
-                        name={
-                          language.name
-                        }
-                        fluency={
-                          language.fluency
-                        }
-                      />
-
-                    )
-                  )}
-
+                <div className="flex flex-wrap gap-2.5 border-y border-white/10 py-6">
+                  {speakingLanguages.map((language) => (
+                    <LanguagePill
+                      key={language.id}
+                      name={language.name}
+                      fluency={language.fluency}
+                    />
+                  ))}
                 </div>
-
               )}
-
             </div>
-
           </div>
-
         </div>
-
       </div>
-
     </section>
   );
 }
