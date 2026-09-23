@@ -2262,18 +2262,262 @@ img {
   }
 }
 
-/* =========================================
-   PUBLIC NAVBAR — BLACK / RED CINEMATIC
-========================================= */
+/* =========================================================
+   UNIFIED PUBLIC PORTFOLIO THEME
+   Black + deep red cinematic system
+   IMPORTANT: admin pages are intentionally excluded.
+========================================================= */
+
+:root {
+  --public-bg-0: #020202;
+  --public-bg-1: #070203;
+  --public-bg-2: #120306;
+  --public-red: rgba(150, 8, 28, 0.22);
+  --public-red-strong: rgba(185, 12, 38, 0.30);
+  --public-border: rgba(255, 255, 255, 0.12);
+}
+
+/* Public page backgrounds */
+.public-red-page,
+main.min-h-screen.text-white:not(.admin-page):not(.admin-login-page),
+.project-detail-page,
+.contact-page {
+  position: relative;
+  isolation: isolate;
+  overflow-x: hidden;
+  color: #ffffff !important;
+  background:
+    radial-gradient(900px 620px at 84% 8%, rgba(125, 8, 24, 0.34), transparent 68%),
+    radial-gradient(760px 560px at 10% 55%, rgba(76, 5, 16, 0.28), transparent 72%),
+    radial-gradient(900px 700px at 58% 94%, rgba(112, 7, 20, 0.20), transparent 70%),
+    linear-gradient(135deg, var(--public-bg-0) 0%, var(--public-bg-1) 38%, var(--public-bg-2) 68%, #040102 100%) !important;
+}
+
+/* Fine editorial grid */
+.public-red-page::before,
+main.min-h-screen.text-white:not(.admin-page):not(.admin-login-page)::before,
+.project-detail-page::before,
+.contact-page::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+  pointer-events: none;
+  background-image:
+    linear-gradient(to right, rgba(255,255,255,0.028) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255,255,255,0.028) 1px, transparent 1px);
+  background-size: 80px 80px;
+  opacity: 0.65;
+}
+
+/* Cinematic grain */
+.public-red-page::after,
+main.min-h-screen.text-white:not(.admin-page):not(.admin-login-page)::after,
+.project-detail-page::after,
+.contact-page::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  opacity: 0.12;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 220 220' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='grain'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.78' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23grain)' opacity='.52'/%3E%3C/svg%3E");
+  background-size: 220px 220px;
+  mix-blend-mode: screen;
+}
+
+/* Keep every public section transparent so the page gradient flows through. */
+.public-red-page > section,
+.public-red-page > footer,
+main.min-h-screen.text-white:not(.admin-page):not(.admin-login-page) > section,
+main.min-h-screen.text-white:not(.admin-page):not(.admin-login-page) > footer {
+  background-color: transparent !important;
+}
+
+/* =========================================================
+   UNIVERSAL PUBLIC CARD OVERRIDES
+   Covers cards that still use old flat Tailwind backgrounds.
+========================================================= */
+
+.public-red-page [class*="bg-[#0D0A0A]"],
+.public-red-page [class*="bg-[#0A0707]"],
+.public-red-page [class*="bg-[#101010]"],
+.public-red-page [class*="bg-[#090909]"],
+main.min-h-screen.text-white:not(.admin-page):not(.admin-login-page) [class*="bg-[#0D0A0A]"],
+main.min-h-screen.text-white:not(.admin-page):not(.admin-login-page) [class*="bg-[#0A0707]"],
+main.min-h-screen.text-white:not(.admin-page):not(.admin-login-page) [class*="bg-[#101010]"],
+main.min-h-screen.text-white:not(.admin-page):not(.admin-login-page) [class*="bg-[#090909]"],
+.project-detail-page .feature-card,
+.project-detail-page .project-image,
+.contact-page .contact-info-block {
+  background:
+    radial-gradient(460px 260px at 90% 0%, rgba(155, 8, 30, 0.22), transparent 70%),
+    linear-gradient(135deg, #080405 0%, #190509 58%, #070203 100%) !important;
+  border-color: rgba(255,255,255,0.12) !important;
+  box-shadow:
+    0 18px 55px rgba(0,0,0,0.24),
+    inset 0 1px 0 rgba(255,255,255,0.035);
+}
+
+/* Large rounded content cards */
+.public-red-page [class*="rounded-[2rem]"][class*="bg-"],
+main.min-h-screen.text-white:not(.admin-page):not(.admin-login-page) [class*="rounded-[2rem]"][class*="bg-"] {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  border-color: rgba(255,255,255,0.12) !important;
+}
+
+.public-red-page [class*="rounded-[2rem]"][class*="bg-"]::before,
+main.min-h-screen.text-white:not(.admin-page):not(.admin-login-page) [class*="rounded-[2rem]"][class*="bg-"]::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background-image:
+    linear-gradient(to right, rgba(255,255,255,0.032) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255,255,255,0.032) 1px, transparent 1px);
+  background-size: 72px 72px;
+  opacity: 0.32;
+}
+
+/* About cards with the exact old red-black palette */
+.public-red-page [class*="border-[#2A1717]"] {
+  background:
+    radial-gradient(500px 260px at 92% 0%, rgba(160,8,31,0.22), transparent 68%),
+    linear-gradient(135deg, #090506 0%, #1a0509 58%, #080203 100%) !important;
+  border-color: rgba(255,255,255,0.12) !important;
+  box-shadow:
+    0 18px 60px rgba(0,0,0,0.26),
+    inset 0 1px 0 rgba(255,255,255,0.035);
+  transition: transform 0.35s ease, border-color 0.35s ease, box-shadow 0.35s ease;
+}
+
+.public-red-page [class*="border-[#2A1717]"]:hover {
+  border-color: rgba(180,15,42,0.38) !important;
+  box-shadow:
+    0 24px 70px rgba(0,0,0,0.32),
+    0 0 38px rgba(140,7,28,0.10);
+}
+
+/* Small rounded pills / technology tags / focus tags */
+.public-red-page [class*="rounded-full"][class*="border-white"]:not(.public-red-button),
+main.min-h-screen.text-white:not(.admin-page):not(.admin-login-page) [class*="rounded-full"][class*="border-white"]:not(.public-red-button) {
+  background:
+    linear-gradient(135deg, rgba(8,4,5,0.96), rgba(45,6,13,0.88), rgba(8,2,4,0.96)) !important;
+  border-color: rgba(255,255,255,0.14) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.035),
+    0 6px 20px rgba(0,0,0,0.15);
+}
+
+.public-red-page [class*="rounded-full"][class*="border-white"]:not(.public-red-button):hover,
+main.min-h-screen.text-white:not(.admin-page):not(.admin-login-page) [class*="rounded-full"][class*="border-white"]:not(.public-red-button):hover {
+  border-color: rgba(185,15,42,0.40) !important;
+  box-shadow:
+    0 8px 28px rgba(105,5,22,0.16),
+    0 0 24px rgba(150,8,30,0.08);
+}
+
+/* =========================================================
+   PUBLIC BUTTON SYSTEM
+========================================================= */
+
+.public-red-page a.bg-white,
+main.min-h-screen.text-white:not(.admin-page):not(.admin-login-page) a.bg-white,
+.contact-page button[type="submit"],
+.project-detail-page .project-button.primary,
+.project-detail-page .project-button:not(.secondary) {
+  background: linear-gradient(135deg, #ffffff 0%, #f8eeee 48%, #ffffff 100%) !important;
+  color: #090909 !important;
+  border-color: rgba(255,255,255,0.72) !important;
+  box-shadow: 0 10px 35px rgba(0,0,0,0.24), 0 0 28px rgba(160,10,28,0.08);
+}
+
+.public-red-page a.bg-white:hover,
+main.min-h-screen.text-white:not(.admin-page):not(.admin-login-page) a.bg-white:hover,
+.contact-page button[type="submit"]:hover,
+.project-detail-page .project-button.primary:hover,
+.project-detail-page .project-button:not(.secondary):hover {
+  background: linear-gradient(135deg, #ffffff 0%, #fff4f5 50%, #ffffff 100%) !important;
+  box-shadow: 0 15px 42px rgba(0,0,0,0.30), 0 0 38px rgba(170,12,35,0.15);
+}
+
+.public-red-page a:not(.bg-white)[class*="rounded-full"],
+main.min-h-screen.text-white:not(.admin-page):not(.admin-login-page) a:not(.bg-white)[class*="rounded-full"] {
+  background: linear-gradient(135deg, rgba(8,3,5,0.94), rgba(48,6,14,0.84), rgba(8,2,4,0.94)) !important;
+  border-color: rgba(255,255,255,0.20) !important;
+  color: #ffffff !important;
+}
+
+/* =========================================================
+   PROJECT DETAIL PAGE
+========================================================= */
+
+.project-detail-page .project-image {
+  position: relative;
+  overflow: hidden;
+  background:
+    radial-gradient(500px 260px at 88% 0%, rgba(160,8,31,0.20), transparent 68%),
+    linear-gradient(135deg, #080405, #190509, #070203) !important;
+}
+
+.project-detail-page .project-image img {
+  position: relative;
+  z-index: 1;
+}
+
+.project-detail-page .project-button.secondary {
+  background: linear-gradient(135deg, #080304, #350710, #090203) !important;
+  color: #ffffff !important;
+  border-color: rgba(255,255,255,0.18) !important;
+}
+
+.project-detail-page .technology-list span {
+  background: linear-gradient(135deg, #080304, #330710, #090203) !important;
+  border-color: rgba(255,255,255,0.12) !important;
+  color: rgba(255,255,255,0.80) !important;
+}
+
+/* =========================================================
+   CONTACT PAGE
+========================================================= */
+
+.contact-page input,
+.contact-page textarea,
+.contact-page select {
+  background: linear-gradient(135deg, rgba(7,3,4,0.96), rgba(28,5,9,0.90), rgba(7,2,4,0.96)) !important;
+  border-color: rgba(255,255,255,0.12) !important;
+  color: #ffffff !important;
+}
+
+.contact-page input:focus,
+.contact-page textarea:focus,
+.contact-page select:focus {
+  border-color: rgba(185,15,42,0.48) !important;
+  box-shadow: 0 0 0 3px rgba(150,8,30,0.08), 0 0 25px rgba(145,8,30,0.08);
+}
+
+.contact-page .contact-info-block,
+.contact-page .contact-form-section {
+  position: relative;
+}
+
+/* =========================================================
+   NAVBAR
+========================================================= */
 
 .public-red-navbar {
   position: fixed;
+  isolation: isolate;
   background:
-    linear-gradient(100deg, rgba(3, 3, 3, 0.97) 0%, rgba(18, 2, 5, 0.96) 52%, rgba(52, 3, 11, 0.94) 100%);
+    radial-gradient(520px 190px at 82% 0%, rgba(145,7,27,0.24), transparent 72%),
+    linear-gradient(100deg, #030303 0%, #080203 48%, #180306 100%) !important;
   border-bottom: 1px solid rgba(255,255,255,0.10);
   backdrop-filter: blur(18px);
   -webkit-backdrop-filter: blur(18px);
-  box-shadow: 0 12px 40px rgba(0,0,0,0.24);
+  box-shadow: 0 14px 45px rgba(0,0,0,0.32), inset 0 -1px 0 rgba(145,8,28,0.12);
 }
 
 .public-red-navbar::before {
@@ -2281,11 +2525,11 @@ img {
   position: absolute;
   inset: 0;
   pointer-events: none;
-  opacity: 0.28;
   background-image:
     linear-gradient(to right, rgba(255,255,255,0.035) 1px, transparent 1px),
     linear-gradient(to bottom, rgba(255,255,255,0.035) 1px, transparent 1px);
-  background-size: 84px 84px;
+  background-size: 70px 70px;
+  opacity: 0.45;
 }
 
 .public-red-navbar::after {
@@ -2293,23 +2537,107 @@ img {
   position: absolute;
   inset: 0;
   pointer-events: none;
-  opacity: 0.08;
-  background:
-    radial-gradient(circle at 85% 50%, rgba(150, 8, 25, 0.55), transparent 42%),
-    linear-gradient(90deg, transparent, rgba(255,255,255,0.025), transparent);
+  background: radial-gradient(circle at 75% 0%, rgba(175,12,36,0.16), transparent 42%);
 }
 
 .public-red-mobile-menu {
   background:
-    radial-gradient(circle at 85% 10%, rgba(130, 7, 22, 0.20), transparent 45%),
-    linear-gradient(145deg, rgba(10, 3, 5, 0.98), rgba(28, 3, 8, 0.96));
+    radial-gradient(circle at 85% 10%, rgba(145,8,29,0.24), transparent 45%),
+    linear-gradient(145deg, rgba(8,3,5,0.98), rgba(35,4,10,0.96)) !important;
+  border-color: rgba(255,255,255,0.12) !important;
+  box-shadow: 0 20px 55px rgba(0,0,0,0.30);
   backdrop-filter: blur(18px);
-  -webkit-backdrop-filter: blur(18px);
 }
 
-@media (max-width: 767px) {
-  .public-red-navbar {
-    background:
-      linear-gradient(100deg, rgba(3, 3, 3, 0.98) 0%, rgba(16, 2, 5, 0.97) 58%, rgba(46, 3, 10, 0.96) 100%);
+/* =========================================================
+   PROFILE CARD
+========================================================= */
+
+.public-profile-cinematic {
+  background:
+    radial-gradient(500px 300px at 78% 12%, rgba(165,12,35,0.26), transparent 62%),
+    linear-gradient(145deg, #120405 0%, #070304 62%, #030202 100%) !important;
+  border-color: rgba(255,255,255,0.16) !important;
+  box-shadow:
+    0 30px 90px rgba(0,0,0,0.55),
+    0 0 90px rgba(111,6,20,0.18),
+    inset 0 0 80px rgba(145,9,24,0.10);
+}
+
+/* =========================================================
+   RESPONSIVE
+========================================================= */
+
+@media (max-width: 768px) {
+  .public-red-page::before,
+  main.min-h-screen.text-white:not(.admin-page):not(.admin-login-page)::before,
+  .project-detail-page::before,
+  .contact-page::before {
+    background-size: 60px 60px;
   }
+
+  .public-red-page [class*="rounded-[2rem]"],
+  main.min-h-screen.text-white:not(.admin-page):not(.admin-login-page) [class*="rounded-[2rem]"] {
+    box-shadow: 0 12px 40px rgba(0,0,0,0.24), inset 0 1px 0 rgba(255,255,255,0.03);
+  }
+}
+
+/* =========================================================
+   CATCH OLD PUBLIC CARD UTILITIES
+   This keeps older public components on the same theme even
+   when they still use Tailwind background utilities.
+========================================================= */
+
+.public-red-page [class*="rounded-3xl"][class*="bg-"],
+.public-red-page [class*="rounded-2xl"][class*="bg-"],
+.public-red-page [class*="rounded-[1.5rem]"][class*="bg-"],
+main.min-h-screen.text-white:not(.admin-page):not(.admin-login-page) [class*="rounded-3xl"][class*="bg-"],
+main.min-h-screen.text-white:not(.admin-page):not(.admin-login-page) [class*="rounded-2xl"][class*="bg-"],
+main.min-h-screen.text-white:not(.admin-page):not(.admin-login-page) [class*="rounded-[1.5rem]"][class*="bg-"] {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  background:
+    radial-gradient(430px 230px at 88% 0%, rgba(150,8,28,0.20), transparent 70%),
+    linear-gradient(135deg, #080405 0%, #180509 58%, #070203 100%) !important;
+  border-color: rgba(255,255,255,0.12) !important;
+  box-shadow:
+    0 16px 52px rgba(0,0,0,0.23),
+    inset 0 1px 0 rgba(255,255,255,0.035);
+}
+
+.public-red-page [class*="rounded-3xl"][class*="bg-"]:hover,
+.public-red-page [class*="rounded-2xl"][class*="bg-"]:hover,
+main.min-h-screen.text-white:not(.admin-page):not(.admin-login-page) [class*="rounded-3xl"][class*="bg-"]:hover,
+main.min-h-screen.text-white:not(.admin-page):not(.admin-login-page) [class*="rounded-2xl"][class*="bg-"]:hover {
+  border-color: rgba(180,15,42,0.38) !important;
+  box-shadow:
+    0 22px 65px rgba(0,0,0,0.30),
+    0 0 34px rgba(140,7,28,0.10);
+}
+
+/* Old translucent public surfaces */
+.public-red-page [class*="bg-white/[0.02]"],
+.public-red-page [class*="bg-white/[0.03]"],
+.public-red-page [class*="bg-white/[0.04]"],
+main.min-h-screen.text-white:not(.admin-page):not(.admin-login-page) [class*="bg-white/[0.02]"],
+main.min-h-screen.text-white:not(.admin-page):not(.admin-login-page) [class*="bg-white/[0.03]"],
+main.min-h-screen.text-white:not(.admin-page):not(.admin-login-page) [class*="bg-white/[0.04]"] {
+  background:
+    linear-gradient(135deg, rgba(7,3,4,0.94), rgba(38,6,13,0.78), rgba(7,2,4,0.94)) !important;
+}
+
+/* Public card hover should feel like one system. */
+.public-red-page [class*="rounded-3xl"],
+.public-red-page [class*="rounded-[2rem]"],
+main.min-h-screen.text-white:not(.admin-page):not(.admin-login-page) [class*="rounded-3xl"],
+main.min-h-screen.text-white:not(.admin-page):not(.admin-login-page) [class*="rounded-[2rem]"] {
+  transition-property: transform, border-color, box-shadow, background-color;
+  transition-duration: 350ms;
+  transition-timing-function: ease;
+}
+
+/* Do not recolor the small profile fallback circle. */
+.public-profile-cinematic .bg-black\/20 {
+  background: rgba(0,0,0,0.28) !important;
 }
